@@ -11,6 +11,8 @@ use serenity::{
 };
 use std::time::Duration;
 
+use crate::audioripper::audioripper;
+
 #[group]
 #[commands(deafen, join, leave, mute, play, ping, undeafen, unmute)]
 struct General;
@@ -172,7 +174,7 @@ async fn play(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     if let Some(handler_lock) = manager.get(guild_id) {
         let mut handler = handler_lock.lock().await;
         println!("Url {}", &url);
-        let source = match songbird::ytdl(&url).await {
+        let source = match audioripper(&url).await {
             Ok(source) => source,
             Err(why) => {
                 println!("Err starting source: {:?}", why);

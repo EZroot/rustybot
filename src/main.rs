@@ -13,6 +13,8 @@ use serenity::{
 
 mod commands;
 mod handler;
+mod audioripper;
+use crate::audioripper::audioripper;
 use crate::commands::GENERAL_GROUP;
 use crate::handler::Handler;
 
@@ -28,7 +30,7 @@ impl TypeMapKey for VoiceManager {
 async fn main() {
     tracing_subscriber::fmt::init();
     // Configure the client with your Discord bot token in the environment.
-    let token = "Mzg3MjY5Nzc1MjY2NDE0NTky.GmKcRo.rM6Ew5L9WIDDIT64kyHICNWoZZ_rrfF56hE3fs";
+    let token = "bot-token";
 
     let framework = StandardFramework::new()
         .configure(|c| c
