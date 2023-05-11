@@ -9,9 +9,17 @@ use serenity::{
     model::channel::Message,
     Result as SerenityResult,
 };
+use songbird::{
+    Event, EventHandler, EventContext, TrackEvent,
+    input::Input
+};
+
 use std::time::Duration;
 
+
+use crate::messages::check_msg;
 use crate::audioripper::audioripper;
+use crate::handler::SongEndNotifier;
 
 #[group]
 #[commands(deafen, join, leave, mute, play, ping, undeafen, unmute)]
@@ -174,6 +182,7 @@ async fn play(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     if let Some(handler_lock) = manager.get(guild_id) {
         let mut handler = handler_lock.lock().await;
         println!("Url {}", &url);
+        
         let source = match audioripper(&url).await {
             Ok(source) => source,
             Err(why) => {
@@ -184,8 +193,22 @@ async fn play(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
                 return Ok(());
             },
         };
-        
-        handler.play_source(source);
+
+
+        let song = handler.play_source(source);
+        let chan_id = msg.channel_id;
+        let send_http = ctx.http.clone();
+
+        // This shows how to fire an event once an audio track completes,
+        // either due to hitting the end of the bytestream or stopped by user code.
+        let _ = song.add_event(
+            Event::Track(TrackEvent::End),
+            SongEndNotifier {
+                chan_id,
+                http: send_http,
+            },
+        );
+
         let sent_msg = msg.channel_id.say(&ctx.http, "Playing song").await?;
 
         tokio::spawn(async move {
@@ -250,13 +273,4 @@ async fn unmute(ctx: &Context, msg: &Message) -> CommandResult {
     }
 
     Ok(())
-}
-
-
-
-/// Checks that a message successfully sent; if not, then logs why to stdout.
-fn check_msg(result: SerenityResult<Message>) {
-    if let Err(why) = result {
-        println!("Error sending message: {:?}", why);
-    }
 }

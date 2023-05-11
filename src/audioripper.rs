@@ -16,16 +16,6 @@ use tracing::trace;
 
 const YOUTUBE_DL_COMMAND: &str = "yt-dlp";
 
-/// Creates a streamed audio source with `youtube-dl` and `ffmpeg`.
-///
-/// This source is not seek-compatible.
-/// If you need looping or track seeking, then consider using
-/// [`Restartable::ytdl`].
-///
-/// `youtube-dlc` and `yt-dlp` are also useable by enabling the `youtube-dlc`
-/// and `yt-dlp` features respectively.
-///
-/// [`Restartable::ytdl`]: crate::input::restartable::Restartable::ytdl
 pub async fn audioripper(uri: impl AsRef<str>) -> Result<Input> {
     _audioripper(uri.as_ref(), &[]).await
 }
@@ -154,17 +144,6 @@ pub(crate) async fn _audioripper_metadata(uri: &str) -> Result<Metadata> {
     Ok(metadata)
 }
 
-/// Creates a streamed audio source from YouTube search results with `youtube-dl(c)`,`ffmpeg`, and `ytsearch`.
-/// Takes the first video listed from the YouTube search.
-///
-/// This source is not seek-compatible.
-/// If you need looping or track seeking, then consider using
-/// [`Restartable::ytdl_search`].
-///
-/// `youtube-dlc` and `yt-dlp` are also useable by enabling the `youtube-dlc`
-/// and `yt-dlp` features respectively.
-///
-/// [`Restartable::ytdl_search`]: crate::input::restartable::Restartable::ytdl_search
 pub async fn audioripper_search(name: impl AsRef<str>) -> Result<Input> {
     audioripper(&format!("ytsearch1:{}", name.as_ref())).await
 }

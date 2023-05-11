@@ -14,7 +14,8 @@ use serenity::{
 mod commands;
 mod handler;
 mod audioripper;
-use crate::audioripper::audioripper;
+mod messages;
+
 use crate::commands::GENERAL_GROUP;
 use crate::handler::Handler;
 
