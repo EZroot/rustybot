@@ -6,10 +6,18 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-serenity = { version = "0.11", features = ["voice"] }
-songbird = {version = "0.3.2", features = ["yt-dlp"] }
-tokio = { version = "1.21.2", features = ["macros", "rt-multi-thread"] }
+serenity = { version = "0.11", features = ["cache", "framework", "standard_framework", "voice"] }
+songbird = {version = "0.3.2", features = ["yt-dlp", "builtin-queue"] }
+tokio = { version = "1.21.2", features = ["full"] }
 tracing = "0.1"
 tracing-subscriber = "0.2"
 tracing-futures = "0.2"
 serde_json = "1.0.96"
+flume = "0.10.14"
+async-trait = "0.1.68"
+tungstenite = "0.19.0"
+async-tungstenite = { version = "0.22.1", features = ["tokio"] }
+url = "2.3.1"
+streamcatcher = "1.0.1"
+symphonia-core = "0.5.2"
+lazy_static = "1.4.0"

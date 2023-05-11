@@ -7,23 +7,25 @@ use serenity::{
         },
     },
     model::channel::Message,
-    Result as SerenityResult,
 };
 use songbird::{
-    Event, EventHandler, EventContext, TrackEvent,
-    input::Input
+    input::Restartable, tracks::TrackQueue
 };
 
-use std::time::Duration;
-
+use std::{time::Duration};
 
 use crate::messages::check_msg;
-use crate::audioripper::audioripper;
-use crate::handler::SongEndNotifier;
 
 #[group]
-#[commands(deafen, join, leave, mute, play, ping, undeafen, unmute)]
+#[commands(help, deafen, join, leave, mute, play, queue, ping, undeafen, unmute)]
 struct General;
+
+#[command]
+#[only_in(guilds)]
+async fn help(ctx: &Context, msg: &Message) -> CommandResult {
+    check_msg(msg.channel_id.say(&ctx.http, "Commands - /help \n /play youtubeurl \n /queue \n /leave").await);
+    Ok(())
+}
 
 #[command]
 #[only_in(guilds)]
@@ -148,6 +150,54 @@ async fn ping(context: &Context, msg: &Message) -> CommandResult {
     Ok(())
 }
 
+
+#[command]
+async fn queue(ctx: &Context, msg: &Message) -> CommandResult {
+    let ctx_clone = ctx.clone();
+    let msg_clone = msg.clone();
+
+    let guild = msg.guild(&ctx.cache).unwrap();
+    let guild_id = guild.id;
+
+    let manager = songbird::get(ctx).await
+        .expect("Songbird Voice client placed in at initialisation.").clone();
+
+    if let Some(handler_lock) = manager.get(guild_id) {
+        let mut handler = handler_lock.lock().await;
+        let song: &TrackQueue = handler.queue();
+        
+        let mut all_songs = String::new();
+        for track in handler.queue().current_queue().iter()
+        {
+            all_songs += track.metadata().title.as_ref().unwrap();
+            all_songs += " \n";
+        }
+        
+        let sent_msg =  msg.channel_id
+        .say(
+            &ctx.http,
+            format!("Songs in Queue: \n{}",&all_songs),
+        )
+        .await?;
+
+        tokio::spawn(async move {
+            tokio::time::sleep(Duration::from_secs(10)).await;
+            if let Err(why) = sent_msg.delete(&ctx_clone.http).await {
+                println!("Error deleting message: {:?}", why);
+            }
+
+             // Delete the user's command message after the delay
+        if let Err(why) = msg_clone.delete(&ctx_clone.http).await {
+            println!("Error deleting message: {:?}", why);
+        }
+        });
+    } else {
+        check_msg(msg.channel_id.say(&ctx.http, "No songs in queue!").await);
+    }
+
+    Ok(())
+}
+
 #[command]
 #[only_in(guilds)]
 async fn play(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
@@ -182,8 +232,9 @@ async fn play(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
     if let Some(handler_lock) = manager.get(guild_id) {
         let mut handler = handler_lock.lock().await;
         println!("Url {}", &url);
-        
-        let source = match audioripper(&url).await {
+      
+      
+        let source = match Restartable::ytdl(url, true).await {
             Ok(source) => source,
             Err(why) => {
                 println!("Err starting source: {:?}", why);
@@ -194,25 +245,21 @@ async fn play(ctx: &Context, msg: &Message, mut args: Args) -> CommandResult {
             },
         };
 
-
-        let song = handler.play_source(source);
-        let chan_id = msg.channel_id;
-        let send_http = ctx.http.clone();
+        let song = handler.enqueue_source(source.into());
 
         // This shows how to fire an event once an audio track completes,
         // either due to hitting the end of the bytestream or stopped by user code.
-        let _ = song.add_event(
-            Event::Track(TrackEvent::End),
-            SongEndNotifier {
-                chan_id,
-                http: send_http,
-            },
-        );
-
-        let sent_msg = msg.channel_id.say(&ctx.http, "Playing song").await?;
+        let song_title = song.metadata().title.as_ref().unwrap();
+        
+        let sent_msg =  msg.channel_id
+        .say(
+            &ctx.http,
+            format!("Added {} to queue #{}",&song_title, handler.queue().len()),
+        )
+        .await?;
 
         tokio::spawn(async move {
-            tokio::time::sleep(Duration::from_secs(5)).await;
+            tokio::time::sleep(Duration::from_secs(10)).await;
             if let Err(why) = sent_msg.delete(&ctx_clone.http).await {
                 println!("Error deleting message: {:?}", why);
             }

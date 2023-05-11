@@ -15,6 +15,7 @@ mod commands;
 mod handler;
 mod audioripper;
 mod messages;
+mod ffmpeg_utils;
 
 use crate::commands::GENERAL_GROUP;
 use crate::handler::Handler;
@@ -25,13 +26,11 @@ impl TypeMapKey for VoiceManager {
     type Value = songbird::Songbird;
 }
 
-
-
 #[tokio::main]
 async fn main() {
     tracing_subscriber::fmt::init();
     // Configure the client with your Discord bot token in the environment.
-    let token = "bot-token";
+    let token = "token";
 
     let framework = StandardFramework::new()
         .configure(|c| c
