@@ -9,6 +9,14 @@ use serenity::model::prelude::interaction::application_command::{
 use serenity::prelude::Context;
 use songbird::input::Restartable;
 
+use std::sync::{Mutex, Arc};
+
+use lazy_static::lazy_static;
+
+lazy_static! {
+    static ref YTDL_MUTEX: Arc<Mutex<()>> = Arc::new(Mutex::new(()));
+}
+
 struct CommandContext 
 {
     authorid : UserId,
@@ -75,16 +83,14 @@ let connect_to = match channel_id {
         println!("Url {}", &url);
 
 
-        let source = match Restartable::ytdl(url, true).await {
-            Ok(source) => source,
-            Err(why) => {
-                println!("Err starting source: {:?}", why);
+        let source = tokio::task::spawn_blocking(move || {
+            let _lock = YTDL_MUTEX.lock().unwrap();
+            Restartable::ytdl(url, true)
+        }).await.unwrap();
 
-                return "Error finding FFMPEG".to_string();
-            },
-        };
+        let true_source = source.await.unwrap();
 
-        let song = handler.enqueue_source(source.into());
+        let song = handler.enqueue_source(true_source.into());
         let song_title = song.metadata().title.as_ref().unwrap();
         return format!("Added {} to queue",&song_title)
     }

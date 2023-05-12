@@ -16,11 +16,12 @@ use songbird::{EventContext, Event, EventHandler as VoiceEventHandler};
 use crate::{commands, slashcommands};
 use crate::messages::check_msg;
 
-pub struct Handler;
 pub struct SongEndNotifier {
     chan_id: ChannelId,
     http: Arc<Http>,
 }
+
+pub struct Handler;
 
 #[async_trait]
 impl EventHandler for Handler {
@@ -31,10 +32,55 @@ impl EventHandler for Handler {
             let content = match command.data.name.as_str() {
                 "ping" => slashcommands::ping::run(&command.data.options),
                 "queue" => slashcommands::queue::run(&ctx, &command.data.options).await,
-                "play" => slashcommands::play::run(&ctx, &command, &command.data.options).await,
+                "play" => {
+
+                    command
+                    .create_interaction_response(&ctx.http, |response| {
+                        response
+                            .kind(InteractionResponseType::DeferredChannelMessageWithSource)
+                            .interaction_response_data(|message| {message
+                                .flags(interaction::MessageFlags::EPHEMERAL)})
+                    })
+                    .await
+                    .unwrap();
+
+                let track = slashcommands::play::run(&ctx, &command, &command.data.options).await;
+
+                command
+                .edit_original_interaction_response(&ctx.http, |reponse| {
+                    reponse
+                    .content(track)
+                })
+                .await
+                .unwrap();
+            return;
+                },
+                "search" =>{
+
+                    command
+                    .create_interaction_response(&ctx.http, |response| {
+                        response
+                            .kind(InteractionResponseType::DeferredChannelMessageWithSource)
+                            .interaction_response_data(|message| {message
+                                .flags(interaction::MessageFlags::EPHEMERAL)})
+                    })
+                    .await
+                    .unwrap();
+
+                let track = slashcommands::search::run(&ctx, &command, &command.data.options).await;
+
+                command
+                .edit_original_interaction_response(&ctx.http, |reponse| {
+                    reponse
+                    .content(track)
+                })
+                .await
+                .unwrap();
+            return;
+                },
                 _ => "not implemented :(".to_string(),
             };
-
+            
             if let Err(why) = command
                 .create_interaction_response(&ctx.http, |response| {
                     response
@@ -71,6 +117,7 @@ let commands = GuildId::set_application_commands(&guild_id, &ctx.http, move |com
     .create_application_command(|command| slashcommands::ping::register(command))
     .create_application_command(|command| slashcommands::queue::register(command))
     .create_application_command(|command| slashcommands::play::register(command))
+    .create_application_command(|command| slashcommands::search::register(command))
 })
 .await;
         // let commands: Result<Vec<Command>, SerenityError> = GuildId::set_application_commands(&guild_id, &ctx.http, |commands| {
