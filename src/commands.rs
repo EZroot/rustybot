@@ -66,6 +66,11 @@ async fn join(ctx: &Context, msg: &Message) -> CommandResult {
     let guild = msg.guild(&ctx.cache).unwrap();
     let guild_id = guild.id;
 
+    // let mut debuginfo = "guildid: ".to_string();
+    // debuginfo += &guild_id.to_string();
+
+    // check_msg(msg.reply(ctx, debuginfo).await);
+
     let channel_id = guild
         .voice_states.get(&msg.author.id)
         .and_then(|voice_state| voice_state.channel_id);

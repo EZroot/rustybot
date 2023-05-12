@@ -17,6 +17,13 @@ mod audioripper;
 mod messages;
 mod ffmpeg_utils;
 
+mod slashcommands
+{
+    pub mod ping;
+    pub mod queue;
+    pub mod play;
+}
+
 use crate::commands::GENERAL_GROUP;
 use crate::handler::Handler;
 
@@ -30,12 +37,13 @@ impl TypeMapKey for VoiceManager {
 async fn main() {
     tracing_subscriber::fmt::init();
     // Configure the client with your Discord bot token in the environment.
-    let token = "token";
+    let token = "Mzg3MjY5Nzc1MjY2NDE0NTky.GU_u1D.BzvXBTiuoC2-HN-9-MeMq39MJ8oWBkdcoBCREo";
 
     let framework = StandardFramework::new()
         .configure(|c| c
                    .prefix("/"))
         .group(&GENERAL_GROUP);
+
 
     let intents = GatewayIntents::non_privileged()
         | GatewayIntents::MESSAGE_CONTENT
