@@ -71,7 +71,7 @@ let connect_to = match channel_id {
 };
 
     let manager = songbird::get(ctx).await
-    .expect("Songbird Voice client placed in at initialisation.").clone();
+    .expect("Songbird Voice client placed in at initialisation.");
 
     manager.join(guild_id, connect_to).await;
 
@@ -82,13 +82,14 @@ let connect_to = match channel_id {
         
         let source = tokio::task::spawn_blocking(move || {
             let _lock = YTDL_SEARCH_MUTEX.lock().unwrap();
-            Restartable::ytdl_search(url, false)
+            Restartable::ytdl_search(url, true) //if any issues, check this lazy instantiation
         }).await.unwrap();
 
         let true_source = source.await.unwrap();
 
         let song = handler.enqueue_source(true_source.into());
         let song_title = song.metadata().title.as_ref().unwrap();
+
         return format!("Found {}! Added to queue.",&song_title)
     }
     else{
@@ -101,7 +102,7 @@ let connect_to = match channel_id {
 pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
     command.name("search").description("Search youtube for stuff").create_option(|option| {
         option
-        .name("title")
+        .name("keyword")
         .description("video title")
         .kind(CommandOptionType::String)
         .required(true)

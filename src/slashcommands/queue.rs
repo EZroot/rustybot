@@ -16,10 +16,18 @@ pub async fn run(ctx: &Context, options: &[CommandDataOption]) -> String {
     if let Some(handler_lock) = manager.get(guild_id) {
         let mut handler = handler_lock.lock().await;
 
+        let mut counter = 0;
         for track in handler.queue().current_queue().iter()
         {
-            all_songs += track.metadata().title.as_ref().unwrap();
-            all_songs += " \n";
+            let meta_data = track.metadata().clone();
+            let leftover_seconds: u64 = meta_data.duration.unwrap().as_secs() % 60;
+            let remove_this_from_truemins = leftover_seconds / 60; 
+            let true_mins: u64 = (meta_data.duration.unwrap().as_secs() - remove_this_from_truemins) / 60;
+
+            let formated_dur = format!("{}:{}", &true_mins, &leftover_seconds);
+            let formated_song = format!("#{} {} [{}] \n", counter.to_string(), &meta_data.title.unwrap(), &formated_dur.to_string());
+            all_songs += &formated_song;
+            counter+=1;
         }
 
     } else {

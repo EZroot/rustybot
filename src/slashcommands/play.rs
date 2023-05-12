@@ -85,7 +85,7 @@ let connect_to = match channel_id {
 
         let source = tokio::task::spawn_blocking(move || {
             let _lock = YTDL_MUTEX.lock().unwrap();
-            Restartable::ytdl(url, true)
+            Restartable::ytdl(url, true) //if any issues, check this lazy instantiation
         }).await.unwrap();
 
         let true_source = source.await.unwrap();
