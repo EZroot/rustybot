@@ -38,7 +38,7 @@ impl TypeMapKey for VoiceManager {
 async fn main() {
     tracing_subscriber::fmt::init();
     // Configure the client with your Discord bot token in the environment.
-    let token = "Mzg3MjY5Nzc1MjY2NDE0NTky.GcbzbI.1SXwH3SuFuZWWyc_1jgFk8IWFpN77J8Pf4pg60";
+    let token = "token";
 
     let framework = StandardFramework::new()
         .configure(|c| c
