@@ -6,6 +6,7 @@ const { TextToSpeechClient } = require('@google-cloud/text-to-speech');
 
 const port = 3000;
 
+const client = new TextToSpeechClient();
 const server = http.createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host}`);
   const path = url.pathname;
@@ -58,36 +59,46 @@ const server = http.createServer(async (req, res) => {
 });
 
 
-async function synthesizeTextRespondBytes(text, voiceName = 'en-US-Wavenet-D') {
+async function synthesizeTextRespondBytes(text, voiceName = 'en-GB-Wavenet-A') {
   const request = {
     input: { text: text },
     voice: { 
       name: voiceName,
-      languageCode: 'en-US' 
+      languageCode: 'en-US',
+      ssmlGender: 'MALE'
     },
     audioConfig: { audioEncoding: 'MP3' },
   };
-  
-
-  const client = new TextToSpeechClient();
 
   const [response] = await client.synthesizeSpeech(request);
   
   return response.audioContent;
 }
 
-async function synthesizeText(text, outputFile, voiceName = 'en-US-Wavenet-D') {
+async function synthesizeText(text, outputFile, voiceName = 'en-AU-Wavenet-B') {
+  const [result] = await client.listVoices({});
+  const voices = result.voices;
+
+  const maleUKVoices = voices.filter(v =>
+    v.languageCodes.includes('en-GB') &&
+    v.ssmlGender === 'MALE'
+  );
+
+  //3 is a keeper, 4 is decent, 5 is meh, 6 is good
+  //8 is really good
+  const voice = maleUKVoices[6];
+
+  console.log("voice {}", voice.name);
+  // Construct the synthesis request with the found voice
   const request = {
     input: { text: text },
-    voice: { 
-      name: voiceName,
-      languageCode: 'en-US' 
+    voice: {
+      name: voice.name,
+      ssmlGender: voice.ssmlGender,
+      languageCode: voice.languageCodes[0],
     },
     audioConfig: { audioEncoding: 'MP3' },
   };
-  
-
-  const client = new TextToSpeechClient();
 
   const [response] = await client.synthesizeSpeech(request);
   const writeFile = util.promisify(fs.writeFile);
@@ -97,7 +108,6 @@ async function synthesizeText(text, outputFile, voiceName = 'en-US-Wavenet-D') {
 
 
 async function listVoices() {
-  const client = new TextToSpeechClient();
 
   const [result] = await client.listVoices({});
   const voices = result.voices;

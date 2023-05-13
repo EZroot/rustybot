@@ -37,7 +37,7 @@ mod slashcommands
     pub mod hey;
     pub mod wolfram;
     pub mod speak;
-    pub mod talktome;
+    pub mod listen;
 }
 
 use crate::commands::GENERAL_GROUP;
@@ -53,8 +53,8 @@ impl TypeMapKey for VoiceManager {
 async fn main() {
     tracing_subscriber::fmt::init();
     // Configure the client with your Discord bot token in the environment.
-    let discord_token = "Mzg3MjY5Nzc1MjY2NDE0NTky.GIolyk.kT7zMjIuKoXmyhmoh-lhGC5HBEAMVgzUQEfpO4";
-    let openai_token = "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".to_string();
+    let discord_token = "token";
+    let openai_token = "token".to_string();
 
     //openai
     set_key(openai_token);
@@ -70,8 +70,6 @@ async fn main() {
         | GatewayIntents::GUILD_VOICE_STATES
         | GatewayIntents::GUILDS
         | GatewayIntents::DIRECT_MESSAGES;
-
-println!("FUCIAISDJKAISJD");
         
     let mut client = Client::builder(&discord_token, intents)
         .event_handler(Handler
