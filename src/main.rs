@@ -24,20 +24,20 @@ mod ffmpeg_utils;
 
 mod ai
 {
-    pub mod wolframy;
-    pub mod googvoice;
+    pub mod wolfy;
+    pub mod voicesynth;
+    pub mod openai;
 }
 
 mod slashcommands
 {
-    pub mod ping;
+    pub mod ask;
+    pub mod askloud;
     pub mod queue;
     pub mod play;
     pub mod search;
-    pub mod hey;
-    pub mod wolfram;
+    pub mod knowledge;
     pub mod speak;
-    pub mod listen;
 }
 
 use crate::commands::GENERAL_GROUP;

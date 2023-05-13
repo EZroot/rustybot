@@ -35,7 +35,6 @@ impl EventHandler for Handler {
         if let Interaction::ApplicationCommand(command) = interaction {
             //println!("Received command interaction: {:#?}", command);
             let content = match command.data.name.as_str() {
-                "ping" => slashcommands::ping::run(&command.data.options),
                 "queue" => slashcommands::queue::run(&ctx, &command.data.options).await,
                 "play" => {
 
@@ -83,7 +82,7 @@ impl EventHandler for Handler {
                 .unwrap();
             return;
                 },
-                "hey" =>{
+                "ask" =>{
 
                     command
                     .create_interaction_response(&ctx.http, |response| {
@@ -94,7 +93,7 @@ impl EventHandler for Handler {
                     .await
                     .unwrap();
 
-                let track = slashcommands::hey::run(&ctx, &command, &command.data.options).await;
+                let track = slashcommands::ask::run(&ctx, &command, &command.data.options).await;
 
                 command
                 .edit_original_interaction_response(&ctx.http, |reponse| {
@@ -105,7 +104,7 @@ impl EventHandler for Handler {
                 .unwrap();
             return;
                 },
-                "listen" =>{
+                "askloud" =>{
 
                     command
                     .create_interaction_response(&ctx.http, |response| {
@@ -116,7 +115,7 @@ impl EventHandler for Handler {
                     .await
                     .unwrap();
 
-                let track = slashcommands::listen::run(&ctx, &command, &command.data.options).await;
+                let track = slashcommands::askloud::run(&ctx, &command, &command.data.options).await;
 
                 command
                 .edit_original_interaction_response(&ctx.http, |reponse| {
@@ -127,7 +126,7 @@ impl EventHandler for Handler {
                 .unwrap();
             return;
                 },
-                "speak" =>{
+                "knowledge" =>{
 
                     command
                     .create_interaction_response(&ctx.http, |response| {
@@ -138,29 +137,7 @@ impl EventHandler for Handler {
                     .await
                     .unwrap();
 
-                let track = slashcommands::speak::run(&ctx, &command, &command.data.options).await;
-
-                command
-                .edit_original_interaction_response(&ctx.http, |reponse| {
-                    reponse
-                    .content(track)
-                })
-                .await
-                .unwrap();
-            return;
-                },
-                "wolfram" =>{
-
-                    command
-                    .create_interaction_response(&ctx.http, |response| {
-                        response
-                            .kind(InteractionResponseType::DeferredChannelMessageWithSource)
-                            .interaction_response_data(|message| {message.ephemeral(false)})
-                    })
-                    .await
-                    .unwrap();
-
-                let track = slashcommands::hey::run(&ctx, &command, &command.data.options).await;
+                let track = slashcommands::ask::run(&ctx, &command, &command.data.options).await;
 
                 command
                 .edit_original_interaction_response(&ctx.http, |reponse| {
@@ -207,14 +184,12 @@ impl EventHandler for Handler {
 
 let commands = GuildId::set_application_commands(&guild_id, &ctx.http, move |commands| {
     commands
-    .create_application_command(|command| slashcommands::ping::register(command))
+    .create_application_command(|command| slashcommands::ask::register(command))
+    .create_application_command(|command| slashcommands::askloud::register(command))
+    .create_application_command(|command| slashcommands::search::register(command))
     .create_application_command(|command| slashcommands::queue::register(command))
     .create_application_command(|command| slashcommands::play::register(command))
-    .create_application_command(|command| slashcommands::search::register(command))
-    .create_application_command(|command| slashcommands::hey::register(command))
-    .create_application_command(|command| slashcommands::wolfram::register(command))
-    .create_application_command(|command| slashcommands::speak::register(command))
-    .create_application_command(|command| slashcommands::listen::register(command))
+    .create_application_command(|command| slashcommands::knowledge::register(command))
 })
 .await;
         // let commands: Result<Vec<Command>, SerenityError> = GuildId::set_application_commands(&guild_id, &ctx.http, |commands| {

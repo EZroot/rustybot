@@ -14,7 +14,7 @@ use std::sync::{Mutex, Arc};
 
 use lazy_static::lazy_static;
 
-use crate::ai::googvoice::synthesize_text;
+use crate::ai::voicesynth::synthesize_text;
 
 lazy_static! {
     static ref YTDL_MUTEX: Arc<Mutex<()>> = Arc::new(Mutex::new(()));
@@ -35,6 +35,17 @@ impl CommandContext {
         }
     }
 }
+/*
+
+
+
+
+        Keeping this but for now, we dont want it.
+
+
+
+
+ */
 
 pub async fn run(ctx: &Context, command: &ApplicationCommandInteraction, options: &[CommandDataOption]) -> String {
 
