@@ -22,13 +22,22 @@ mod audioripper;
 mod messages;
 mod ffmpeg_utils;
 
+mod ai
+{
+    pub mod wolframy;
+    pub mod googvoice;
+}
+
 mod slashcommands
 {
     pub mod ping;
     pub mod queue;
     pub mod play;
     pub mod search;
-    pub mod aioverlord;
+    pub mod hey;
+    pub mod wolfram;
+    pub mod speak;
+    pub mod talktome;
 }
 
 use crate::commands::GENERAL_GROUP;
@@ -44,17 +53,11 @@ impl TypeMapKey for VoiceManager {
 async fn main() {
     tracing_subscriber::fmt::init();
     // Configure the client with your Discord bot token in the environment.
-    let discord_token = "token";
-    let openai_token = "token".to_string();
+    let discord_token = "Mzg3MjY5Nzc1MjY2NDE0NTky.GIolyk.kT7zMjIuKoXmyhmoh-lhGC5HBEAMVgzUQEfpO4";
+    let openai_token = "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".to_string();
 
     //openai
     set_key(openai_token);
-
-    let mut messages = vec![ChatCompletionMessage {
-        role: ChatCompletionMessageRole::System,
-        content: "You are a large language model built into a command line interface as an example of what the `openai` Rust library made by Valentine Briese can do.".to_string(),
-        name: None,
-    }];
 
     let framework = StandardFramework::new()
         .configure(|c| c
@@ -68,9 +71,9 @@ async fn main() {
         | GatewayIntents::GUILDS
         | GatewayIntents::DIRECT_MESSAGES;
 
-
+println!("FUCIAISDJKAISJD");
         
-    let mut client = Client::builder(&token, intents)
+    let mut client = Client::builder(&discord_token, intents)
         .event_handler(Handler
         {
             is_loop_running: AtomicBool::new(false),
@@ -79,9 +82,6 @@ async fn main() {
         .register_songbird()
         .await
         .expect("Err creating client");
-
-
-        
 
         if let Err(why) = client.start().await {
             println!("An error occurred while running the client: {:?}", why);

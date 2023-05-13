@@ -83,7 +83,7 @@ impl EventHandler for Handler {
                 .unwrap();
             return;
                 },
-                "aioverlord" =>{
+                "hey" =>{
 
                     command
                     .create_interaction_response(&ctx.http, |response| {
@@ -94,7 +94,73 @@ impl EventHandler for Handler {
                     .await
                     .unwrap();
 
-                let track = slashcommands::aioverlord::run(&ctx, &command, &command.data.options).await;
+                let track = slashcommands::hey::run(&ctx, &command, &command.data.options).await;
+
+                command
+                .edit_original_interaction_response(&ctx.http, |reponse| {
+                    reponse
+                    .content(track)
+                })
+                .await
+                .unwrap();
+            return;
+                },
+                "speak" =>{
+
+                    command
+                    .create_interaction_response(&ctx.http, |response| {
+                        response
+                            .kind(InteractionResponseType::DeferredChannelMessageWithSource)
+                            .interaction_response_data(|message| {message.ephemeral(false)})
+                    })
+                    .await
+                    .unwrap();
+
+                let track = slashcommands::speak::run(&ctx, &command, &command.data.options).await;
+
+                command
+                .edit_original_interaction_response(&ctx.http, |reponse| {
+                    reponse
+                    .content(track)
+                })
+                .await
+                .unwrap();
+            return;
+                },
+                "talktome" =>{
+
+                    command
+                    .create_interaction_response(&ctx.http, |response| {
+                        response
+                            .kind(InteractionResponseType::DeferredChannelMessageWithSource)
+                            .interaction_response_data(|message| {message.ephemeral(false)})
+                    })
+                    .await
+                    .unwrap();
+
+                let track = slashcommands::talktome::run(&ctx, &command, &command.data.options).await;
+
+                command
+                .edit_original_interaction_response(&ctx.http, |reponse| {
+                    reponse
+                    .content(track)
+                })
+                .await
+                .unwrap();
+            return;
+                },
+                "wolfram" =>{
+
+                    command
+                    .create_interaction_response(&ctx.http, |response| {
+                        response
+                            .kind(InteractionResponseType::DeferredChannelMessageWithSource)
+                            .interaction_response_data(|message| {message.ephemeral(false)})
+                    })
+                    .await
+                    .unwrap();
+
+                let track = slashcommands::hey::run(&ctx, &command, &command.data.options).await;
 
                 command
                 .edit_original_interaction_response(&ctx.http, |reponse| {
@@ -145,7 +211,10 @@ let commands = GuildId::set_application_commands(&guild_id, &ctx.http, move |com
     .create_application_command(|command| slashcommands::queue::register(command))
     .create_application_command(|command| slashcommands::play::register(command))
     .create_application_command(|command| slashcommands::search::register(command))
-    .create_application_command(|command| slashcommands::aioverlord::register(command))
+    .create_application_command(|command| slashcommands::hey::register(command))
+    .create_application_command(|command| slashcommands::talktome::register(command))
+    .create_application_command(|command| slashcommands::wolfram::register(command))
+    .create_application_command(|command| slashcommands::speak::register(command))
 })
 .await;
         // let commands: Result<Vec<Command>, SerenityError> = GuildId::set_application_commands(&guild_id, &ctx.http, |commands| {
