@@ -66,9 +66,36 @@ pub async fn run(
 
     // let trimmed_string = generate_openai_response(user_request, command.user.id).await;
     let cmd_clone = command.user.clone();
-    let trimmed_string =
-        generate_openai_response_include_username(cmd_clone.name, user_request, cmd_clone.id).await;
-    synthesize_text(&trimmed_string, "output.mp3")
+    let ai_req = user_request.clone();
+    let raw_ai_response =
+        generate_openai_response_include_username(cmd_clone.name, ai_req, cmd_clone.id).await;
+
+    
+        let user_name_and_question = format!("<@{}>: {}", cmd_clone.id, user_request);
+        
+        let char_count_trimmed = raw_ai_response.chars().count();
+        let char_count_original = user_name_and_question.chars().count();
+    
+        let both = char_count_trimmed + char_count_original;
+        println!(
+            "question len: {} answer l: {} both l: {}",
+            char_count_original, char_count_trimmed, both
+        );
+        
+        let synthesized_text = raw_ai_response.clone();
+        let mut cleaned_up_string = String::new();
+        if both < 2000 {
+            cleaned_up_string = raw_ai_response.to_string();
+        } else {
+            let difference: i64 = (both - 1980).try_into().unwrap();
+            let difference_abs = difference.abs() as usize;
+    
+            let better = &raw_ai_response[..raw_ai_response.len() - difference_abs];
+            cleaned_up_string = better.to_string();
+        }
+
+    
+    synthesize_text(&synthesized_text, "output.mp3")
         .await
         .unwrap();
 
@@ -112,7 +139,7 @@ pub async fn run(
 
         let song = handler.play_source(true_source.into());
 
-        return format!("{}\n\n{}", user_name_and_question, trimmed_string);
+        return format!("{}\n\n{}", user_name_and_question, &cleaned_up_string);
     } else {
         let derp = " <- Failed to play".to_string();
         return derp;

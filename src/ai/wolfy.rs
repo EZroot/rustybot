@@ -14,11 +14,13 @@ struct WolframAlphaResponse {
 
 #[derive(Deserialize)]
 struct QueryResult {
+    #[serde(default)]
     pods: Vec<Pod>,
 }
 
 #[derive(Deserialize)]
 struct Pod {
+    #[serde(default)]
     subpods: Vec<SubPod>,
 }
 
@@ -44,13 +46,12 @@ pub async fn query(input: String) -> String {
         .await
         .unwrap();
 
-    let distance = response
-        .queryresult
-        .pods
-        .iter()
-        .find(|pod| pod.subpods.iter().any(|subpod| subpod.plaintext.is_some()))
-        .and_then(|pod| pod.subpods.iter().find_map(|subpod| subpod.plaintext.as_ref()))
-        .unwrap();
+        let answer = response.queryresult.pods.iter()
+        .flat_map(|pod| pod.subpods.iter())
+        .filter_map(|subpod| subpod.plaintext.as_ref())
+        .map(|text| text.replace("`", ""))
+        .map(|text| format!("``` {} ```", text))
+        .collect::<String>();
 
-    format!("Distance from moon to earth: {}", distance)
+    format!("Sphinx of Knowledge:\n{}", answer)
 }

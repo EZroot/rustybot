@@ -137,7 +137,7 @@ impl EventHandler for Handler {
                     .await
                     .unwrap();
 
-                let track = slashcommands::ask::run(&ctx, &command, &command.data.options).await;
+                let track = slashcommands::knowledge::run(&ctx, &command, &command.data.options).await;
 
                 command
                 .edit_original_interaction_response(&ctx.http, |reponse| {
