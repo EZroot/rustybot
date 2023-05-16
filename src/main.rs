@@ -27,6 +27,7 @@ mod ai
     pub mod wolfy;
     pub mod voicesynth;
     pub mod openai;
+    pub mod diffuserai;
 }
 
 mod slashcommands
@@ -38,6 +39,8 @@ mod slashcommands
     pub mod search;
     pub mod knowledge;
     pub mod speak;
+    pub mod paint;
+    pub mod paintdetailed;
 }
 
 use crate::commands::GENERAL_GROUP;
@@ -69,7 +72,8 @@ async fn main() {
         | GatewayIntents::MESSAGE_CONTENT
         | GatewayIntents::GUILD_VOICE_STATES
         | GatewayIntents::GUILDS
-        | GatewayIntents::DIRECT_MESSAGES;
+        | GatewayIntents::DIRECT_MESSAGES
+        | GatewayIntents::GUILD_MESSAGES;
         
     let mut client = Client::builder(&discord_token, intents)
         .event_handler(Handler

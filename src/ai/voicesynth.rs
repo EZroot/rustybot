@@ -45,7 +45,6 @@ pub async fn synthesize_text(text: &str, output_file: &str) -> Result<(), Box<dy
     let url = format!("http://localhost:3000/synthesize?text={}&outputFile={}", text, output_file);
     let response = reqwest::get(&url).await?.text().await?;
     println!("{}", response);
-
     Ok(())
 }
 

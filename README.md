@@ -6,6 +6,8 @@ FEATURES:
 * Ask GPT3.5 a question, and hear them speak in voice!
 * Generate 512x512 images from Spatial-Diffuse1.5
 
+it seems like the safety check takes insane amount of gpu vram, so beware.
+(aka, disable that shit)
 imggenerator - generate images with spatial-diffuse-1.5
 * stablediffuse-generator -> imggenerator
 * checkforcuda -> check for cuda
