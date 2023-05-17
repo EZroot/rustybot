@@ -73,7 +73,7 @@ fn get_image_path(json_str: &str) -> Option<String> {
 fn filter_path(linux_path: &str) -> Option<String> {
     if let Some(index) = linux_path.rfind('/') {
         if let Some(filename) = linux_path.get(index + 1..) {
-            return Some(format!("./artificialintelligence/{}", filename));
+            return Some(format!("./artificialintelligence/gen_pics/{}", filename));
         }
     }
     None

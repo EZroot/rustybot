@@ -88,9 +88,9 @@ async def generate_image():
         num_rows = (num_images + num_columns - 1) // num_columns  # Calculate the number of rows for the grid
 
         grid = image_grid(results, rows=num_rows, cols=num_columns) if use_columns else image_grid(results, rows=num_images, cols=1)
-        filename = f"/gen_pics/{prompt.replace(' ', '_').lower()}.png"
+        filename = f"./gen_pics/{prompt.replace(' ', '_').lower()}.png"
         await asyncio.to_thread(grid.save, filename)
         return jsonify({'image_path': os.path.abspath(filename)})
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=False, port=5000)

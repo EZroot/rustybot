@@ -4,20 +4,15 @@ import signal
 import threading
 import queue
 import math
-
-import torch
-import librosa
-from transformers import Wav2Vec2ForCTC, Wav2Vec2Processor
-
-#transcriptions
-MODEL_ID = "jonatasgrosman/wav2vec2-large-xlsr-53-english"
-SAMPLE_RATE = 16_000
+import requests
 
 # Set the server address and port
 SERVER_IP = '192.168.0.4'  # Replace with the server's IP address
 SERVER_PORT = 7679  # Replace with the server's port number
-SPEAKING_VOLUMN = 700 # usual talking is 1000-2000, quiet is 200-500 or so
-output_file = "received_audio.wav"  # Output file name
+SPEAKING_VOLUMN = 2000 # usual talking is 1000-2000, quiet is 200-500 or so
+MAX_BUFFER_SIZE = 50000 # how much audio to listen to till we try again
+RECORDING_LISTEN_TICK = 5 # how many times it will wait for speaking threshold before saving recording 
+output_file = "./gen_commands/saved_command.wav"  # Output file name
 
 # Set the audio parameters
 sample_rate = 44100  # Sample rate (Hz)
@@ -42,12 +37,6 @@ def signal_handler(sig, frame):
 # Register the signal handler
 signal.signal(signal.SIGINT, signal_handler)
 
-
-# Load the Wav2Vec2 model and processor
-processor = Wav2Vec2Processor.from_pretrained(MODEL_ID)
-model = Wav2Vec2ForCTC.from_pretrained(MODEL_ID)
-print("Transcribe AI model {} loaded.", MODEL_ID)
-
 # Create a socket client
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 client_socket.connect((SERVER_IP, SERVER_PORT))
@@ -64,9 +53,12 @@ def buffer_audio():
     buffer_size = 0
     buffer_audio_bytes = b''
     volume_audio_bytes = b''
-    max_buffer_size = 1000000  # Adjust the size as per your requirement
-    prev_volumn = 0
+    max_buffer_size = MAX_BUFFER_SIZE  # Adjust the size as per your requirement
+    previous_volumn = 0
+    
+    timeout_tick = 0
 
+    is_recording_command = False
     while not stopped:
         try:
             # Get the current audio bytes from the queue
@@ -77,6 +69,9 @@ def buffer_audio():
             buffer_audio_bytes += current_audio_bytes
             volume_audio_bytes += current_audio_bytes
             buffer_size += len(current_audio_bytes)
+            prev_volumn = previous_volumn
+            timeout = timeout_tick
+            recording_command = is_recording_command
             buffer_lock.release()
 
 
@@ -84,62 +79,58 @@ def buffer_audio():
             if buffer_size >= max_buffer_size:
                 # Calculate the volume of the audio
                 volume = calculate_volume(volume_audio_bytes)
-                if prev_volumn > SPEAKING_VOLUMN:
-                    if volume < SPEAKING_VOLUMN: 
-                        print(f"Saving audio cuz volumn was low")
-                        save_audio(buffer_audio_bytes)
-                        # Reset the buffer size and audio bytes
-                        buffer_lock.acquire()
-                        buffer_size = 0
-                        buffer_audio_bytes = b''
-                        volume_audio_bytes = b''
-                        buffer_lock.release()
-                    else:
-                        # Reset the buffer size and audio bytes
-                        buffer_lock.acquire()
-                        buffer_size = 0
-                        #buffer_audio_bytes = b''
-                        volume_audio_bytes = b''
-                        buffer_lock.release()
-                else:
-                    # Reset the buffer size and audio bytes
+                if not recording_command and volume > SPEAKING_VOLUMN and prev_volumn > SPEAKING_VOLUMN:
+                    print("Command Started...")
                     buffer_lock.acquire()
+                    is_recording_command = True
                     buffer_size = 0
                     #buffer_audio_bytes = b''
                     volume_audio_bytes = b''
                     buffer_lock.release()
-                prev_volumn = volume
-                print(f"Volume: {volume}")
-                print(f"Prev_Volume: {prev_volumn}")
+                 
+                if recording_command:
+                    if prev_volumn < SPEAKING_VOLUMN:
+                        # Reset the buffer size and audio bytes
+                        #print("Listening to command: Timeout [{}]",timeout)
+                        buffer_lock.acquire()
+                        buffer_size = 0
+                        volume_audio_bytes = b''
+                        timeout_tick+=1
+                        buffer_lock.release()
+                        if timeout > RECORDING_LISTEN_TICK:
+                            print("Threshold reached, saving audio: len {}", len(buffer_audio_bytes))
+                            save_audio(buffer_audio_bytes)
+                            buffer_lock.acquire()
+                            buffer_audio_bytes = b''
+                            timeout_tick=0
+                            is_recording_command = False
+                            buffer_lock.release()
+                    else:
+                        #print("Resetting timeout")
+                        buffer_lock.acquire()
+                        buffer_size = 0
+                        volume_audio_bytes = b''
+                        timeout_tick=0
+                        buffer_lock.release()
+    
+                if not recording_command:
+                    #Reset the buffer size and audio bytes
+                    #print("Not recording, resetting buffer")
+                    buffer_lock.acquire()
+                    buffer_size = 0
+                    buffer_audio_bytes = b''
+                    volume_audio_bytes = b''
+                    buffer_lock.release()
+
+                print(f"Volume curr/prev {volume}/{prev_volumn}")
+                buffer_lock.acquire()
+                previous_volumn = volume
+                buffer_lock.release()
+                # #sys.stdout.flush()          
 
         except Exception as e:
             print("Error buffering audio:", str(e))
             break
-
-    # Save the remaining audio if any
-    if buffer_size > 0:
-        volume = calculate_volume(volume_audio_bytes)
-        save_audio(buffer_audio_bytes)
-        print(f"Volume: {volume}")
-
-
-def perform_transcription(audio_path):
-    
-    # Load the audio file as an array
-    audio_array, _ = librosa.load(audio_path, sr=SAMPLE_RATE)
-
-    # Preprocess the audio input
-    inputs = processor(audio_array, sampling_rate=SAMPLE_RATE, return_tensors="pt", padding=True)
-
-    # Perform transcription
-    with torch.no_grad():
-        logits = model(inputs.input_values, attention_mask=inputs.attention_mask).logits
-
-    predicted_ids = torch.argmax(logits, dim=-1)
-    transcriptions = processor.batch_decode(predicted_ids)
-
-    # Return the transcriptions
-    return '\n'.join(transcriptions)
 
 # Function to save audio to a file
 def save_audio(audio_bytes):
@@ -151,9 +142,12 @@ def save_audio(audio_bytes):
         wav_file.setframerate(sample_rate)
         # Write the audio bytes to the WAV file
         wav_file.writeframes(audio_bytes)
+        wav_file.close()
         print("Saved audio")
-        transcriptions = perform_transcription(f"./{output_file}")
-        print("Trancription: ",transcriptions)
+        url = 'http://localhost:4269/transcribe'
+        print(f"Sending transcription request{url}")
+        requests.get(url)
+
     except Exception as e:
         print("Error saving audio:", str(e))
 

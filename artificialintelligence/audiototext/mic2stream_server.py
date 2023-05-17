@@ -12,12 +12,6 @@ SERVER_PORT = 7679  # Replace with your desired port number
 sample_rate = 44100  # Sample rate (Hz)
 output_file = "output.wav"  # Output file name
 
-# Create a WAV file to save the audio
-wav_file = wave.open(output_file, 'wb')
-wav_file.setnchannels(1)  # Mono audio
-wav_file.setsampwidth(2)  # 16-bit audio
-wav_file.setframerate(sample_rate)
-
 # Create a socket server
 server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 server_socket.bind((SERVER_IP, SERVER_PORT))
@@ -28,9 +22,6 @@ print("Server started. Waiting for client connection...")
 def audio_callback(indata, frames, time, status):
     # Convert audio data to bytes
     audio_bytes = (indata * 32767).astype(np.int16).tobytes()
-
-    # Write the audio data to the WAV file
-    wav_file.writeframes(audio_bytes)
 
     # Send the audio data to the client
     client_socket.sendall(audio_bytes)
@@ -76,10 +67,8 @@ client_thread.start()
 # Wait for the thread to finish
 client_thread.join()
 
-# Close the WAV file
-wav_file.close()
 
 # Close the server socket
 server_socket.close()
 
-print(f"Recording saved to {output_file}")
+print(f"Server ended, \nRecording stopped.")

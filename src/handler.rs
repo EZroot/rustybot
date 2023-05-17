@@ -1,10 +1,13 @@
 use std::env;
 use std::fs::File;
+use std::io::Write;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
-
+use reqwest::Client as ReqwestClient;
+use serde_json::json;
 use serenity::async_trait;
+use serenity::builder::CreateMessage;
 use serenity::http::Http;
 use serenity::model::application::command::Command;
 use serenity::model::application::interaction::{Interaction, InteractionResponseType};
@@ -12,29 +15,108 @@ use serenity::model::gateway::Ready;
 use serenity::model::id::GuildId;
 use serenity::model::prelude::application_command::ApplicationCommandOptionType;
 use serenity::model::prelude::{
-    interaction, Activity, ChannelId, InteractionApplicationCommandCallbackDataFlags,
+    interaction, Activity, ChannelId, InteractionApplicationCommandCallbackDataFlags, Message,
 };
 use serenity::model::Timestamp;
 use serenity::prelude::*;
 use songbird::{Event, EventContext, EventHandler as VoiceEventHandler};
 
 use chrono::{Local, Utc};
+use tokio::io::{self, AsyncWriteExt};
+
+use std::sync::{ Mutex};
+
 
 use crate::messages::check_msg;
 use crate::{commands, slashcommands};
 use std::path::{self, PathBuf};
+
+
+// Define a global shared data struct
+pub struct GlobalData {
+    pub queued_command: String,
+    // Add other fields as needed
+}
+
+
+// Create a global mutable shared data using an RwLock
+lazy_static::lazy_static! {
+    pub static ref GLOBAL_DATA: Arc<RwLock<GlobalData>> = Arc::new(RwLock::new(GlobalData {
+        queued_command: "Empty".to_string(),
+        // Initialize other fields
+    }));
+}
+
+pub async fn update_global_data(command : String) -> Result<(),()> {
+    // Lock the mutex to access the shared data
+    let mut global_data = GLOBAL_DATA.write().await;
+    // Access and modify the shared data
+    global_data.queued_command = command;
+    println!("Global data successfuly updated");
+    // Unlock the mutex to release the lock
+    // The lock will be automatically released when `global_data` goes out of scope
+    Ok(())
+}
 
 pub struct SongEndNotifier {
     chan_id: ChannelId,
     http: Arc<Http>,
 }
 
-pub struct Handler {
+pub struct EventHandlers {
+    pub slash_command_handler: SlashCommandHandler,
+    pub http_request_handler: HttpRequestHandler,
+    // Add more handlers as needed
+}
+
+pub struct SlashCommandHandler {
     pub is_loop_running: AtomicBool,
 }
 
+pub struct HttpRequestHandler {
+    pub http: Arc<ReqwestClient>,
+    pub channel_id: ChannelId, 
+}
+
+pub struct HttpHandler;
+
+impl TypeMapKey for HttpHandler {
+    type Value = ChannelId;
+}
+
 #[async_trait]
-impl EventHandler for Handler {
+impl EventHandler for EventHandlers {
+    async fn ready(&self, ctx: Context, ready: Ready) {
+        let ctx_copy = ctx.clone();
+        let ready_copy = ready.clone();
+        self.slash_command_handler.ready(ctx, ready).await;
+        self.http_request_handler.ready(ctx_copy, ready_copy).await;
+        // Call the appropriate ready function for each handler
+    }
+    
+    async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
+        self.slash_command_handler.interaction_create(ctx, interaction).await;
+    }
+    async fn cache_ready(&self, ctx: Context, _guilds: Vec<GuildId>) {
+        self.slash_command_handler.cache_ready(ctx, _guilds).await;
+    }
+}
+
+
+impl HttpRequestHandler {
+    async fn ready(&self, ctx: Context, ready: Ready) {
+        println!("Bot is ready!");
+
+        // Send a message when the bot is ready
+        let _ = self
+            .channel_id
+            .say(&ctx.http, "Bot is ready!")
+            .await;
+    }
+}
+
+
+impl SlashCommandHandler {
     async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
         if let Interaction::ApplicationCommand(command) = interaction {
             //println!("Received command interaction: {:#?}", command);
@@ -284,9 +366,39 @@ impl EventHandler for Handler {
             // And of course, we can run more than one thread at different timings.
             let ctx2 = Arc::clone(&ctx);
             tokio::spawn(async move {
+                
+                let mut counter : usize  = 0;
                 loop {
+                    counter += 1;
+                    if counter > 3 {
+                        counter = 0;
+                    }
+                    
+                    let dots: String = std::iter::repeat('.').take(counter).collect();
+                    let message = format!("Polling Commands{} ", dots);
+            
+                    print!("\r{}{}", message, " ".repeat(20 - message.len()));
+                    std::io::stdout().flush().unwrap();
+                        // Lock the mutex to access the shared data
+                    let mut global_data = GLOBAL_DATA.write().await;
+        
+                    // Access and modify the counter field
+                    let command = global_data.queued_command.clone();
+                    if command.len() > 0 {
+                        // Do something with the updated counter value
+                        let message_content = json!({
+                            "content": command,
+                        });
+                        println!("Polled command: {}", message_content);
+
+                        let channel = &ctx2.cache.guild_channel(703698331141931078).unwrap();
+                        channel.send_message(&ctx2, |m| m.content(command)).await.unwrap();
+
+                        global_data.queued_command = "".to_string();
+                    }
+
                     set_status_to_current_time(Arc::clone(&ctx2)).await;
-                    tokio::time::sleep(Duration::from_secs(10)).await;
+                    tokio::time::sleep(Duration::from_secs(3)).await;
                 }
             });
 
