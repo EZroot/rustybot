@@ -14,7 +14,7 @@ use songbird::{
 
 use std::{time::Duration};
 
-use crate::messages::check_msg;
+use crate::{messages::check_msg, ai::openai::generate_openai_response_include_username};
 
 #[group]
 #[commands(help, deafen, join, leave, mute, play, queue, ping, undeafen, unmute)]
@@ -22,7 +22,7 @@ struct General;
 
 #[command]
 #[only_in(guilds)]
-async fn help(ctx: &Context, msg: &Message) -> CommandResult {
+pub async fn help(ctx: &Context, msg: &Message) -> CommandResult {
     check_msg(msg.channel_id.say(&ctx.http, "Commands - /help \n /play youtubeurl \n /queue \n /leave").await);
     Ok(())
 }
@@ -149,9 +149,26 @@ async fn mute(ctx: &Context, msg: &Message) -> CommandResult {
 }
 
 #[command]
-async fn ping(context: &Context, msg: &Message) -> CommandResult {
-    check_msg(msg.channel_id.say(&context.http, "Pong!").await);
+pub async fn ping(context: &Context, msg: &Message, mut args: Args) -> CommandResult {
 
+    let url = match args.single::<String>() {
+        Ok(url) => url,
+        Err(_) => {
+            check_msg(msg.channel_id.say(&context.http, "Question? Sorry I didn't quite catch that.").await);
+            return Ok(())
+        },
+    };
+
+    let raw_ai_response =
+    generate_openai_response_include_username("Dillon".to_string(), url, 263098093824638979.into()).await;
+    
+    //msg.delete(&context).await.unwrap();
+    //check_msg(msg.channel_id.say(&context.http, "Paint? Sorry I didn't quite catch that.").await);
+    let msgid = msg.id;
+    let mut newMsg = msg.channel_id.message(&context, msgid).await.unwrap();
+    newMsg.edit(&context, |m| {
+        m.content(raw_ai_response)
+    }).await.unwrap();
     Ok(())
 }
 

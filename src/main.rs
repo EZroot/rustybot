@@ -55,6 +55,14 @@ mod ai {
     pub mod wolfy;
 }
 
+mod voiceactivatedcommands{
+    pub mod discordcommands{
+        pub mod ask;
+        pub mod paint;
+        pub mod search;
+    }
+}
+
 mod slashcommands {
     pub mod ask;
     pub mod askloud;
@@ -94,11 +102,14 @@ async fn main() {
         .configure(|c| c.prefix("/"))
         .group(&GENERAL_GROUP);
 
-    let intents = GatewayIntents::non_privileged()
+    let intents = GatewayIntents::privileged()
         | GatewayIntents::MESSAGE_CONTENT
         | GatewayIntents::GUILD_VOICE_STATES
         | GatewayIntents::GUILDS
         | GatewayIntents::DIRECT_MESSAGES
+        | GatewayIntents::GUILD_PRESENCES
+        | GatewayIntents::GUILD_MEMBERS
+        | GatewayIntents::GUILD_INTEGRATIONS
         | GatewayIntents::GUILD_MESSAGES;
 
     let slash_handler = SlashCommandHandler {
@@ -150,36 +161,6 @@ async fn main() {
 
         warp::serve(route).run(([192, 168, 0, 4], 3030)).await;
     });
-
-    // let polling_commands_handle = tokio::spawn( async move {
-    //     let mut counter : usize  = 0;
-    //     loop {
-    //         counter += 1;
-    //         if counter > 3 {
-    //             counter = 0;
-    //         }
-    //         let dots: String = std::iter::repeat('.').take(counter).collect();
-    //         let message = format!("Polling Commands{} ", dots);
-    
-    //         print!("\r{}{}", message, " ".repeat(20 - message.len()));
-    //         io::stdout().flush().unwrap();
-    //             // Lock the mutex to access the shared data
-    //         let mut global_data = GLOBAL_DATA.write().await;
-
-    //         // Access and modify the counter field
-    //         let command = global_data.queued_command.clone();
-    //         if command.len() > 0 {
-    //             // Do something with the updated counter value
-    //             println!("Polled command: {}", command);
-                
-    //             global_data.queued_command = "".to_string();
-    //         }
-    //         // Unlock the mutex to release the lock
-    //         // The lock will be automatically released when `global_data` goes out of scope
-    //         // Sleep for a duration before the next polling iteration
-    //         sleep(Duration::from_secs(1)).await;
-    //     }
-    // });
 
     let client_handle = tokio::spawn(async move {
         if let Err(why) = client.start().await {

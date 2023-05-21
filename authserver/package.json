@@ -1,6 +1,0 @@
-{
-  "dependencies": {
-    "@google-cloud/text-to-speech": "^4.2.2",
-    "yargs": "^17.7.2"
-  }
-}

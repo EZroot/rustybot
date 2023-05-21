@@ -48,7 +48,7 @@ pub async fn run(
         args_clone = attachment.clone();
     }
 
-    generate_stable_diffuse_image(&args_clone, 512,768,200,7.5, 4, false).await.unwrap()
+    generate_stable_diffuse_image(&args_clone, 512,768,400,7.5, 1, false).await.unwrap()
 }
 
 pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
