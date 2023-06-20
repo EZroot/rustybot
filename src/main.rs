@@ -69,6 +69,8 @@ mod slashcommands {
     pub mod knowledge;
     pub mod paint;
     pub mod paintdetailed;
+    pub mod paintportrait;
+    pub mod paintlandscape;
     pub mod play;
     pub mod queue;
     pub mod search;
@@ -92,8 +94,8 @@ impl TypeMapKey for VoiceManager {
 async fn main() {
     tracing_subscriber::fmt::init();
     // Configure the client with your Discord bot token in the environment.
-    let discord_token = "token";
-    let openai_token = "token".to_string();
+    let discord_token = "Mzg3MjY5Nzc1MjY2NDE0NTky.Grjydp.6duH9scv5eX0mW2VoGG-5VsCuK4cig_97mWzBU";
+    let openai_token = "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".to_string();
 
     //openai
     set_key(openai_token);
@@ -159,7 +161,7 @@ async fn main() {
             ccc
         });
 
-        warp::serve(route).run(([192, 168, 0, 4], 3030)).await;
+        warp::serve(route).run(([192, 168, 0, 2], 3030)).await;
     });
 
     let client_handle = tokio::spawn(async move {

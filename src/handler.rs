@@ -144,9 +144,9 @@ impl SlashCommandHandler {
                 .create_application_command(|command| slashcommands::play::register(command))
                 .create_application_command(|command| slashcommands::knowledge::register(command))
                 .create_application_command(|command| slashcommands::paint::register(command))
-                .create_application_command(|command| {
-                    slashcommands::paintdetailed::register(command)
-                })
+                .create_application_command(|command| slashcommands::paintdetailed::register(command))
+                .create_application_command(|command| slashcommands::paintportrait::register(command))
+                .create_application_command(|command| slashcommands::paintlandscape::register(command))
         })
         .await;
         // let commands: Result<Vec<Command>, SerenityError> = GuildId::set_application_commands(&guild_id, &ctx.http, |commands| {
@@ -297,6 +297,54 @@ async fn process_commands(ctx: Context, command: ApplicationCommandInteraction) 
                 .unwrap();
 
             let file_path = slashcommands::paint::run(&command.data.options).await;
+            println!("file_path {}", &file_path);
+            let file = PathBuf::from(file_path);
+
+            // Send the file as a follow-up message
+            command
+                .create_followup_message(&ctx.http, |message| message.add_file(&file))
+                .await
+                .unwrap();
+
+            return;
+        }
+        "paintportrait" => {
+            command
+                .create_interaction_response(&ctx.http, |response| {
+                    response
+                        .kind(InteractionResponseType::DeferredChannelMessageWithSource)
+                        .interaction_response_data(|message| {
+                            message.content("Generating image... give me a few minutes.")
+                        })
+                })
+                .await
+                .unwrap();
+
+            let file_path = slashcommands::paintportrait::run(&command.data.options).await;
+            println!("file_path {}", &file_path);
+            let file = PathBuf::from(file_path);
+
+            // Send the file as a follow-up message
+            command
+                .create_followup_message(&ctx.http, |message| message.add_file(&file))
+                .await
+                .unwrap();
+
+            return;
+        }
+        "paintlandscape" => {
+            command
+                .create_interaction_response(&ctx.http, |response| {
+                    response
+                        .kind(InteractionResponseType::DeferredChannelMessageWithSource)
+                        .interaction_response_data(|message| {
+                            message.content("Generating image... give me a few minutes.")
+                        })
+                })
+                .await
+                .unwrap();
+
+            let file_path = slashcommands::paintlandscape::run(&command.data.options).await;
             println!("file_path {}", &file_path);
             let file = PathBuf::from(file_path);
 

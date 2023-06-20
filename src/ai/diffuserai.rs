@@ -26,13 +26,12 @@ pub async fn generate_stable_diffuse_image(
     height: i32,
     width: i32,
     num_inference_steps: i32,
-    guidance_scale: f32,
     img_count: i32,
     use_columns:bool,
 ) -> Result<String, Box<dyn Error>> {
     let url = format!(
-        "http://localhost:5000/generateimg?prompt={}&height={}&width={}&num_inference_steps={}&guidance_scale={}&img_count={}&use_columns={}",
-        prompt, height, width, num_inference_steps, guidance_scale,img_count,use_columns
+        "http://localhost:6969/stablediffusion?prompt={}&height={}&width={}&num_inference_steps={}&img_count={}&use_columns={}&negative_prompt={}&resized_image_strength={}&resized_image_noise={}",
+        prompt, height, width, num_inference_steps,img_count,use_columns, "duplicate, amputation, easynegative, negative_hand", 0.72, 0,
     );
 
     let response = reqwest::get(&url).await.map_err(|e| format!("Failed to send request: {}", e))?;
@@ -46,8 +45,9 @@ pub async fn generate_stable_diffuse_image(
 
     let image_path = json["image_path"].as_str().ok_or("image_path not found or not a string")?;
     println!("image_path: {}", &image_path);
-
-    let filtered_path = filter_path(image_path).ok_or(format!("Failed to filter the image path: {}", &image_path))?;
+    let win_path = image_path.replace("/mnt/c/", "C:/");
+    println!("Windows Path: {:?}", win_path);
+    let filtered_path = win_path;
     println!("filtered_path: {}", &filtered_path);
     Ok(filtered_path)
 }

@@ -32,7 +32,7 @@ struct SubPod {
 pub async fn query(input: String) -> String {
     let query = WolframAlphaQuery {
         input: input,
-        appid: "token".to_string(),
+        appid: "QWQHV9-J6XYP9G697".to_string(),
         output: "json".to_string(),
     };
 

@@ -47,14 +47,15 @@ pub async fn run(
     if let CommandDataOptionValue::String(attachment) = option {
         args_clone = attachment.clone();
     }
-
-    generate_stable_diffuse_image(&args_clone, 512,768,400,7.5, 1, false).await.unwrap()
+    //generate_stable_diffuse_image(&args_clone, 904,904,50, 2, false).await.unwrap() //904x904 for realistic v2.0
+    //generate_stable_diffuse_image(&args_clone, 944,944,50, 2, false).await.unwrap() // 944x944 for paragon
+    generate_stable_diffuse_image(&args_clone, 768,768,50, 1, false).await.unwrap() // 944x944 for paragon
 }
 
 pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
     command
         .name("paintdetailed")
-        .description("Paint some detailed shit. Takes 6-7 minutes roughly.")
+        .description("2 detailed image at 904x904 ( 1.8x detail )")
         .create_option(|option| {
             option
                 .name("prompt")

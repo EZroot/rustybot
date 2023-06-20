@@ -48,13 +48,15 @@ pub async fn run(
         args_clone = attachment.clone();
     }
 
-    generate_stable_diffuse_image(&args_clone, 512,512,20,7.5,4, false).await.unwrap()
+    //generate_stable_diffuse_image(&args_clone, 904,904,50,1, true).await.unwrap() // realistic v2
+    //generate_stable_diffuse_image(&args_clone, 944,944,50, 2, false).await.unwrap() // 944x944 for paragon
+    generate_stable_diffuse_image(&args_clone, 512,512,50, 2, false).await.unwrap() // 944x944 for paragon
 }
 
 pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
     command
         .name("paint")
-        .description("Paint some shit. Takes a minute.")
+        .description("4 images at 512x512. (fast)")
         .create_option(|option| {
             option
                 .name("prompt")
