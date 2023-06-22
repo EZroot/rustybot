@@ -75,6 +75,7 @@ mod slashcommands {
     pub mod queue;
     pub mod search;
     pub mod speak;
+    pub mod sketch;
 }
 
 use crate::{commands::GENERAL_GROUP, handler::GLOBAL_DATA};

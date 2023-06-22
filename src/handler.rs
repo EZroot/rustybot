@@ -147,6 +147,7 @@ impl SlashCommandHandler {
                 .create_application_command(|command| slashcommands::paintdetailed::register(command))
                 .create_application_command(|command| slashcommands::paintportrait::register(command))
                 .create_application_command(|command| slashcommands::paintlandscape::register(command))
+                .create_application_command(|command| slashcommands::sketch::register(command))
         })
         .await;
         // let commands: Result<Vec<Command>, SerenityError> = GuildId::set_application_commands(&guild_id, &ctx.http, |commands| {
@@ -369,6 +370,30 @@ async fn process_commands(ctx: Context, command: ApplicationCommandInteraction) 
                 .unwrap();
 
             let file_path = slashcommands::paintdetailed::run(&command.data.options).await;
+            println!("file_path {}", &file_path);
+            let file = PathBuf::from(file_path);
+
+            // Send the file as a follow-up message
+            command
+                .create_followup_message(&ctx.http, |message| message.add_file(&file))
+                .await
+                .unwrap();
+
+            return;
+        }
+        "sketch" => {
+            command
+                .create_interaction_response(&ctx.http, |response| {
+                    response
+                        .kind(InteractionResponseType::DeferredChannelMessageWithSource)
+                        .interaction_response_data(|message| {
+                            message.content("Generating image... give me a few minutes.")
+                        })
+                })
+                .await
+                .unwrap();
+
+            let file_path = slashcommands::sketch::run(&command.data.options).await;
             println!("file_path {}", &file_path);
             let file = PathBuf::from(file_path);
 

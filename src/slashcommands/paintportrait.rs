@@ -13,7 +13,7 @@ use std::sync::{Arc, Mutex};
 
 use lazy_static::lazy_static;
 
-use crate::ai::diffuserai::generate_stable_diffuse_image;
+use crate::ai::diffuserai::{generate_stable_diffuse_image, ImageFilter};
 
 lazy_static! {
     static ref YTDL_MUTEX: Arc<Mutex<()>> = Arc::new(Mutex::new(()));
@@ -45,11 +45,11 @@ pub async fn run(
 
     let mut args_clone = String::new();
     if let CommandDataOptionValue::String(attachment) = option {
-        args_clone = format!("{} {}", attachment.clone(), "(portrait-shot  768x1024), (--ar 2:3)");
+        args_clone = format!("{} {}", attachment.clone(), "(portrait-shot), (--ar 1:2)");
     }
     //generate_stable_diffuse_image(&args_clone, 904,904,50, 2, false).await.unwrap() //904x904 817k for realistic v2.0
     //generate_stable_diffuse_image(&args_clone, 944,944,50, 2, false).await.unwrap() // 944x944 for paragon
-    generate_stable_diffuse_image(&args_clone, 1024, 512,50, 1, false).await.unwrap() // 944x944 891k for paragon
+    generate_stable_diffuse_image(&args_clone, 1024, 512,50, 2, false, 500, ImageFilter::GaussainNoise,0.8, false).await.unwrap() // 944x944 891k for paragon
 }
 
 pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {

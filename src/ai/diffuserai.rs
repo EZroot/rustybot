@@ -7,6 +7,37 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::string;
 
+#[derive(Debug)]
+pub enum ImageFilter {
+    NoFilter = 0,
+    RandomNoise = 1,
+    GaussainNoise = 2,
+    RandomNoiseFromPallette = 3,
+}
+
+impl From<ImageFilter> for i32 {
+    fn from(filter: ImageFilter) -> Self {
+        match filter {
+            ImageFilter::NoFilter => 0,
+            ImageFilter::RandomNoise => 1,
+            ImageFilter::GaussainNoise => 2,
+            ImageFilter::RandomNoiseFromPallette => 3,
+        }
+    }
+}
+
+impl From<i32> for ImageFilter {
+    fn from(value: i32) -> Self {
+        match value {
+            0 => ImageFilter::NoFilter,
+            1 => ImageFilter::RandomNoise,
+            2 => ImageFilter::GaussainNoise,
+            3 => ImageFilter::RandomNoiseFromPallette,
+            _ => panic!("Invalid filter value"),
+        }
+    }
+}
+
 #[derive(Debug, Serialize)]
 struct AIDiffuserRequest {
     prompt: String,
@@ -29,50 +60,34 @@ pub async fn generate_stable_diffuse_image(
     num_inference_steps: i32,
     img_count: i32,
     use_columns: bool,
+    first_image_noise: i32,
+    image_filter_enum: ImageFilter,
+    upscaled_image_generation_strength: f64,
+    upscale_original_bool: bool,
 ) -> Result<String, Box<dyn Error>> {
     let mut url = String::new();
     let first_image_generation_strength = 1;
-    let upscaled_image_generation_strength = 0.8;
     let chunk_size = 32;
     let blur_size = 16;
-    let edge_blur_size = 32;
+    let edge_blur_size = 64; //was 32
     let num_inference_steps = num_inference_steps;
+    println!("Current Upscale Bool: {}", upscale_original_bool);
+    let image_filter_enum_value: i32 = image_filter_enum.into();
     //squared
-    if width == height {
-        //large square
-        if width > 700 {
-            let upscaled_width = width + 256;
-            let upscaled_height = height + 256;
-            url = format!(
-            "http://localhost:6969/stablediffusion?prompt={}&height={}&width={}&num_inference_steps={}&img_count={}&use_columns={}&negative_prompt={}&first_image_strength={}&resized_image_strength={}&chunk_size={}&blur_radius={}&edge_radius={}&upscaled_size_width={}&upscaled_size_height={}",
-            prompt, height, width, num_inference_steps,img_count,use_columns, "duplicate, amputation, easynegative, negative_hand", first_image_generation_strength, upscaled_image_generation_strength, chunk_size,blur_size,edge_blur_size,upscaled_width,upscaled_height
-        );
-            //small square
-        } else {
-            let upscaled_width = width + 512;
-            let upscaled_height = height + 512;
-            url = format!(
-            "http://localhost:6969/stablediffusion?prompt={}&height={}&width={}&num_inference_steps={}&img_count={}&use_columns={}&negative_prompt={}&first_image_strength={}&resized_image_strength={}&chunk_size={}&blur_radius={}&edge_radius={}&upscaled_size_width={}&upscaled_size_height={}",
-            prompt, height, width, num_inference_steps,img_count,use_columns, "duplicate, amputation, easynegative, negative_hand", first_image_generation_strength, upscaled_image_generation_strength, chunk_size,blur_size,edge_blur_size,upscaled_width,upscaled_height
-        );
-        }
-    //landscape
-    } else if width > height {
-        let upscaled_width = width + 768;
-        let upscaled_height = height + 512;
+    let upscaled_width = width + 512;
+    let upscaled_height = height + 512;
+    if upscale_original_bool {
         url = format!(
-            "http://localhost:6969/stablediffusion?prompt={}&height={}&width={}&num_inference_steps={}&img_count={}&use_columns={}&negative_prompt={}&first_image_strength={}&resized_image_strength={}&chunk_size={}&blur_radius={}&edge_radius={}&upscaled_size_width={}&upscaled_size_height={}",
-            prompt, height, width, num_inference_steps,img_count,use_columns, "duplicate, amputation, easynegative, negative_hand", first_image_generation_strength, upscaled_image_generation_strength, chunk_size,blur_size,edge_blur_size,upscaled_width,upscaled_height
-        );
-    //portrait
+            "http://localhost:6969/stablediffusion?prompt={}&height={}&width={}&num_inference_steps={}&img_count={}&use_columns={}&negative_prompt={}&first_image_strength={}&resized_image_strength={}&chunk_size={}&blur_radius={}&edge_radius={}&upscaled_size_width={}&upscaled_size_height={}&first_image_noise={}&image_filter_enum={}&upscale_original_bool={}",
+            prompt, height, width, num_inference_steps,img_count,use_columns, "duplicate, amputation, easynegative, negative_hand", first_image_generation_strength, upscaled_image_generation_strength, chunk_size,blur_size,edge_blur_size,upscaled_width,upscaled_height,first_image_noise,image_filter_enum_value, upscale_original_bool
+            );
     } else {
-        let upscaled_width = width + 512;
-        let upscaled_height = height + 768;
         url = format!(
-            "http://localhost:6969/stablediffusion?prompt={}&height={}&width={}&num_inference_steps={}&img_count={}&use_columns={}&negative_prompt={}&first_image_strength={}&resized_image_strength={}&chunk_size={}&blur_radius={}&edge_radius={}&upscaled_size_width={}&upscaled_size_height={}",
-            prompt, height, width, num_inference_steps,img_count,use_columns, "duplicate, amputation, easynegative, negative_hand", first_image_generation_strength, upscaled_image_generation_strength, chunk_size,blur_size,edge_blur_size,upscaled_width,upscaled_height
-        );
+                "http://localhost:6969/stablediffusion?prompt={}&height={}&width={}&num_inference_steps={}&img_count={}&use_columns={}&negative_prompt={}&first_image_strength={}&resized_image_strength={}&chunk_size={}&blur_radius={}&edge_radius={}&upscaled_size_width={}&upscaled_size_height={}&first_image_noise={}&image_filter_enum={}",
+                prompt, height, width, num_inference_steps,img_count,use_columns, "duplicate, amputation, easynegative, negative_hand", first_image_generation_strength, upscaled_image_generation_strength, chunk_size,blur_size,edge_blur_size,upscaled_width,upscaled_height,first_image_noise,image_filter_enum_value
+                );
     }
+    println!("Sent Url: {}", url);
 
     let response = reqwest::get(&url)
         .await

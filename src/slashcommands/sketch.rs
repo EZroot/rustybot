@@ -45,18 +45,20 @@ pub async fn run(
 
     let mut args_clone = String::new();
     if let CommandDataOptionValue::String(attachment) = option {
-        args_clone = format!("{} {}", attachment.clone(), "(wide-shot), (--ar 2:1)");
+        args_clone = attachment.clone();
     }
-    //generate_stable_diffuse_image(&args_clone, 904,904,50, 2, false).await.unwrap() //904x904 817k for realistic v2.0
+
+    //generate_stable_diffuse_image(&args_clone, 904,904,50,1, true).await.unwrap() // realistic v2
     //generate_stable_diffuse_image(&args_clone, 944,944,50, 2, false).await.unwrap() // 944x944 for paragon
-    //generate_stable_diffuse_image(&args_clone, 720,1280,50, 2, false).await.unwrap() // 944x944 891k for paragon
-    generate_stable_diffuse_image(&args_clone, 512, 1024,50, 2, true, 500, ImageFilter::GaussainNoise,0.8, false).await.unwrap() // 944x944 891k for paragon
+    generate_stable_diffuse_image(&args_clone, 768,768,50,
+         2, false, 0,ImageFilter::NoFilter,
+         0.5, true).await.unwrap() // 944x944 for paragon
 }
 
 pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
     command
-        .name("paintlandscape")
-        .description("2 landscape image at 1152x704")
+        .name("sketch")
+        .description("sketch the drawing on a white background")
         .create_option(|option| {
             option
                 .name("prompt")
