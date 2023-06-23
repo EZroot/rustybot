@@ -55,6 +55,7 @@ struct AIDiffuserResponse {
 
 pub async fn generate_stable_diffuse_image(
     prompt: &str,
+    negative_prompt: &str,
     height: i32,
     width: i32,
     num_inference_steps: i32,
@@ -74,17 +75,21 @@ pub async fn generate_stable_diffuse_image(
     println!("Current Upscale Bool: {}", upscale_original_bool);
     let image_filter_enum_value: i32 = image_filter_enum.into();
     //squared
-    let upscaled_width = width + 512;
-    let upscaled_height = height + 512;
-    if upscale_original_bool {
+    let width_as_f32:f32= width as f32;
+    let height_as_f32:f32= height as f32;
+    
+    let upscaled_width = (width_as_f32 * 1.5) as i32; //if this isnt a multiple of 8 this will throw a error
+    let upscaled_height = (height_as_f32 * 1.5) as i32;
+
+    if upscale_original_bool == false {
         url = format!(
             "http://localhost:6969/stablediffusion?prompt={}&height={}&width={}&num_inference_steps={}&img_count={}&use_columns={}&negative_prompt={}&first_image_strength={}&resized_image_strength={}&chunk_size={}&blur_radius={}&edge_radius={}&upscaled_size_width={}&upscaled_size_height={}&first_image_noise={}&image_filter_enum={}&upscale_original_bool={}",
-            prompt, height, width, num_inference_steps,img_count,use_columns, "duplicate, amputation, easynegative, negative_hand", first_image_generation_strength, upscaled_image_generation_strength, chunk_size,blur_size,edge_blur_size,upscaled_width,upscaled_height,first_image_noise,image_filter_enum_value, upscale_original_bool
+            prompt, height, width, num_inference_steps,img_count,use_columns, negative_prompt, first_image_generation_strength, upscaled_image_generation_strength, chunk_size,blur_size,edge_blur_size,upscaled_width,upscaled_height,first_image_noise,image_filter_enum_value, upscale_original_bool
             );
     } else {
         url = format!(
                 "http://localhost:6969/stablediffusion?prompt={}&height={}&width={}&num_inference_steps={}&img_count={}&use_columns={}&negative_prompt={}&first_image_strength={}&resized_image_strength={}&chunk_size={}&blur_radius={}&edge_radius={}&upscaled_size_width={}&upscaled_size_height={}&first_image_noise={}&image_filter_enum={}",
-                prompt, height, width, num_inference_steps,img_count,use_columns, "duplicate, amputation, easynegative, negative_hand", first_image_generation_strength, upscaled_image_generation_strength, chunk_size,blur_size,edge_blur_size,upscaled_width,upscaled_height,first_image_noise,image_filter_enum_value
+                prompt, height, width, num_inference_steps,img_count,use_columns, negative_prompt, first_image_generation_strength, upscaled_image_generation_strength, chunk_size,blur_size,edge_blur_size,upscaled_width,upscaled_height,first_image_noise,image_filter_enum_value
                 );
     }
     println!("Sent Url: {}", url);
