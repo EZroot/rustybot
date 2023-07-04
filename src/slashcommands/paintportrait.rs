@@ -74,7 +74,7 @@ pub async fn run(
     //generate_stable_diffuse_image(&args_clone, 904,904,50, 2, false).await.unwrap() //904x904 817k for realistic v2.0
     //generate_stable_diffuse_image(&args_clone, 944,944,50, 2, false).await.unwrap() // 944x944 for paragon
     //generate_stable_diffuse_image(&args_clone, 720,1280,50, 2, false).await.unwrap() // 944x944 891k for paragon
-    generate_stable_diffuse_image(&prompt_args_clone,&negative_prompt_args_clone, 1024, 512,50, 2, true, 500, ImageFilter::GaussainNoise,0.8, high_res_args_clone).await.unwrap() // 944x944 891k for paragon
+    generate_stable_diffuse_image(&prompt_args_clone,&negative_prompt_args_clone, 1024, 512,75, 1, true, 500, ImageFilter::GaussainNoise,0.8, high_res_args_clone).await.unwrap() // 944x944 891k for paragon
 }
 
 pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {

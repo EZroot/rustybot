@@ -68,9 +68,6 @@ pub async fn generate_stable_diffuse_image(
 ) -> Result<String, Box<dyn Error>> {
     let mut url = String::new();
     let first_image_generation_strength = 1;
-    let chunk_size = 32;
-    let blur_size = 16;
-    let edge_blur_size = 64; //was 32
     let num_inference_steps = num_inference_steps;
     println!("Current Upscale Bool: {}", upscale_original_bool);
     let image_filter_enum_value: i32 = image_filter_enum.into();
@@ -82,11 +79,17 @@ pub async fn generate_stable_diffuse_image(
     let upscaled_height = (height_as_f32 * 1.5) as i32;
 
     if upscale_original_bool == false {
+    let chunk_size = 32;
+    let blur_size = 16;
+    let edge_blur_size = 64; //was 32
         url = format!(
             "http://localhost:6969/stablediffusion?prompt={}&height={}&width={}&num_inference_steps={}&img_count={}&use_columns={}&negative_prompt={}&first_image_strength={}&resized_image_strength={}&chunk_size={}&blur_radius={}&edge_radius={}&upscaled_size_width={}&upscaled_size_height={}&first_image_noise={}&image_filter_enum={}&upscale_original_bool={}",
             prompt, height, width, num_inference_steps,img_count,use_columns, negative_prompt, first_image_generation_strength, upscaled_image_generation_strength, chunk_size,blur_size,edge_blur_size,upscaled_width,upscaled_height,first_image_noise,image_filter_enum_value, upscale_original_bool
             );
     } else {
+    let chunk_size = 1;
+    let blur_size = 1;
+    let edge_blur_size = 1; //was 32
         url = format!(
                 "http://localhost:6969/stablediffusion?prompt={}&height={}&width={}&num_inference_steps={}&img_count={}&use_columns={}&negative_prompt={}&first_image_strength={}&resized_image_strength={}&chunk_size={}&blur_radius={}&edge_radius={}&upscaled_size_width={}&upscaled_size_height={}&first_image_noise={}&image_filter_enum={}",
                 prompt, height, width, num_inference_steps,img_count,use_columns, negative_prompt, first_image_generation_strength, upscaled_image_generation_strength, chunk_size,blur_size,edge_blur_size,upscaled_width,upscaled_height,first_image_noise,image_filter_enum_value
