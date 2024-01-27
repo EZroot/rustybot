@@ -1,3 +1,4 @@
+#![allow(warnings)]
 use handler::HttpHandler;
 use serde::Deserialize;
 use serenity::{
@@ -57,9 +58,9 @@ mod ai {
 
 mod voiceactivatedcommands{
     pub mod discordcommands{
-        pub mod ask;
+        //pub mod ask;
         pub mod paint;
-        pub mod search;
+        //pub mod search;
     }
 }
 
@@ -72,6 +73,8 @@ mod slashcommands {
     pub mod paintportrait;
     pub mod paintlandscape;
     pub mod play;
+    pub mod leave;
+    pub mod skip;
     pub mod queue;
     pub mod search;
     pub mod speak;
@@ -95,15 +98,15 @@ impl TypeMapKey for VoiceManager {
 async fn main() {
     tracing_subscriber::fmt::init();
     // Configure the client with your Discord bot token in the environment.
-    let discord_token = "Mzg3MjY5Nzc1MjY2NDE0NTky.Grjydp.6duH9scv5eX0mW2VoGG-5VsCuK4cig_97mWzBU";
-    let openai_token = "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".to_string();
-
+    let discord_token = "aaaa";
+    let openai_token = "aaaa".to_string();
+    let discord_app_id = 1234;
     //openai
     set_key(openai_token);
 
     let framework = StandardFramework::new()
-        .configure(|c| c.prefix("/"))
-        .group(&GENERAL_GROUP);
+    .configure(|c: &mut serenity::framework::standard::Configuration| c.prefix("/"))
+    .group(&GENERAL_GROUP);
 
     let intents = GatewayIntents::privileged()
         | GatewayIntents::MESSAGE_CONTENT
@@ -119,7 +122,7 @@ async fn main() {
         is_loop_running: AtomicBool::new(false),
     };
 
-    let http_channel_id = ChannelId(1234567890); // Replace with the actual channel ID
+    let http_channel_id = ChannelId(703698331141931078); // Replace with the actual channel ID
 
     let http_req_handler = HttpRequestHandler {
         http: Arc::new(ReqwestClient::new()),
@@ -133,6 +136,7 @@ async fn main() {
 
     let mut client = Client::builder(&discord_token, intents)
         .event_handler(combined_handlers)
+        .application_id(discord_app_id)
         .framework(framework)
         .register_songbird()
         .await
@@ -162,7 +166,7 @@ async fn main() {
             ccc
         });
 
-        warp::serve(route).run(([192, 168, 0, 2], 3030)).await;
+        warp::serve(route).run(([192, 168, 0, 5], 3030)).await;
     });
 
     let client_handle = tokio::spawn(async move {

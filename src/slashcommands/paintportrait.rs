@@ -74,13 +74,13 @@ pub async fn run(
     //generate_stable_diffuse_image(&args_clone, 904,904,50, 2, false).await.unwrap() //904x904 817k for realistic v2.0
     //generate_stable_diffuse_image(&args_clone, 944,944,50, 2, false).await.unwrap() // 944x944 for paragon
     //generate_stable_diffuse_image(&args_clone, 720,1280,50, 2, false).await.unwrap() // 944x944 891k for paragon
-    generate_stable_diffuse_image(&prompt_args_clone,&negative_prompt_args_clone, 1024, 512,75, 1, true, 500, ImageFilter::GaussainNoise,0.8, high_res_args_clone).await.unwrap() // 944x944 891k for paragon
+    generate_stable_diffuse_image(&prompt_args_clone,&negative_prompt_args_clone, 1024, 512,75, 2, true, 500, ImageFilter::GaussainNoise,0.8, high_res_args_clone).await.unwrap() // 944x944 891k for paragon
 }
 
 pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
     command
         .name("paintportrait")
-        .description("2 portrait images at 1152x704")
+        .description("2 portrait images at 1024x512")
         .create_option(|option| {
             option
                 .name("prompt")
@@ -93,8 +93,9 @@ pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicatio
                 .name("extend-background")
                 .description("Extends the background. Or regular upscale if not")
                 .kind(CommandOptionType::Boolean)
-                .required(true)
-        })        .create_option(|option| {
+                .required(false)
+        })        
+        .create_option(|option| {
             option
                 .name("negative-prompt")
                 .description("Default: duplicate, amputation, easynegative, negative_hand")

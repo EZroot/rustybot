@@ -80,7 +80,7 @@ pub async fn run(
 pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
     command
         .name("paint")
-        .description("4 images at 512x512. (fast)")
+        .description("2 images at 512x512. (fast)")
         .create_option(|option| {
             option
                 .name("prompt")
@@ -93,7 +93,7 @@ pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicatio
                 .name("extend-background")
                 .description("Extends the background. Or regular upscale if not")
                 .kind(CommandOptionType::Boolean)
-                .required(true)
+                .required(false)
         })        .create_option(|option| {
             option
                 .name("negative-prompt")

@@ -4,10 +4,11 @@ use serenity::async_trait;
 use serenity::builder::CreateMessage;
 use serenity::framework::standard::{CommandOptions, Args, Delimiter};
 use serenity::http::Http;
-use serenity::model::application::command::Command;
+use serenity::model::application::command::{Command, CommandOptionType};
 use serenity::model::application::interaction::{Interaction, InteractionResponseType};
 use serenity::model::gateway::Ready;
 use serenity::model::id::GuildId;
+use serenity::model::interactions::application_command::ApplicationCommand;
 use serenity::model::prelude::application_command::ApplicationCommandOptionType;
 use serenity::model::prelude::interaction::application_command::ApplicationCommandInteraction;
 use serenity::model::prelude::{
@@ -27,8 +28,8 @@ use chrono::{Local, Utc};
 use tokio::io::{self, AsyncWriteExt};
 
 use std::sync::Mutex;
-
-use crate::commands::ping;
+use colored::*;
+// use crate::commands::ping;
 use crate::messages::check_msg;
 use crate::{commands, slashcommands, voiceactivatedcommands};
 use std::path::{self, PathBuf};
@@ -107,10 +108,10 @@ impl EventHandler for EventHandlers {
 
 impl HttpRequestHandler {
     async fn ready(&self, ctx: Context, ready: Ready) {
-        println!("Bot is ready!");
+        println!("{}", "Bot is ready!".bright_green());
 
         // Send a message when the bot is ready
-        let _ = self.channel_id.say(&ctx.http, "Bot is ready!").await;
+        //let _ = self.channel_id.say(&ctx.http, "Bot is ready!").await;
     }
 }
 
@@ -124,45 +125,58 @@ impl SlashCommandHandler {
 
     async fn ready(&self, ctx: Context, ready: Ready) {
         let ready_clone = ready.clone();
-        println!("{} is connected!", &ready_clone.user.name);
+        println!("{} {}", &ready_clone.user.name.bright_green(), "is connected! :)".green());
 
         //need to do this on channel join event probably?
         // if let Some(guild) = ready_clone.guilds.first() {
         //     self.guild_id = Some(guild.id);
         // }
 
-        let guild_id = GuildId::from(308708637679812608); //self.guild_id.unwrap();
+        let guild_id = GuildId::from(308708637679812608);
 
         let ctx_arc = ctx.clone();
 
-        let commands = GuildId::set_application_commands(&guild_id, &ctx.http, move |commands| {
-            commands
-                .create_application_command(|command| slashcommands::ask::register(command))
-                .create_application_command(|command| slashcommands::askloud::register(command))
-                .create_application_command(|command| slashcommands::search::register(command))
-                .create_application_command(|command| slashcommands::queue::register(command))
-                .create_application_command(|command| slashcommands::play::register(command))
-                .create_application_command(|command| slashcommands::knowledge::register(command))
-                .create_application_command(|command| slashcommands::paint::register(command))
-                .create_application_command(|command| slashcommands::paintdetailed::register(command))
-                .create_application_command(|command| slashcommands::paintportrait::register(command))
-                .create_application_command(|command| slashcommands::paintlandscape::register(command))
-                .create_application_command(|command| slashcommands::sketch::register(command))
-        })
-        .await;
-        // let commands: Result<Vec<Command>, SerenityError> = GuildId::set_application_commands(&guild_id, &ctx.http, |commands| {
-        //     commands.create_application_command(|command| {
-        //         command.name("ping").description("Ping command")}) })
+        //Not sure why the fuck these arent registering, but the below ones are..
+        
+        // let commands = GuildId::set_application_commands(&guild_id, &ctx.http, move |commands| {
+        //     commands
+        // let commands = ApplicationCommand::set_global_application_commands(&ctx.http, |commands| {            commands
+        //     let commands: Result<Vec<Command>, SerenityError> = GuildId::set_application_commands(&guild_id, &ctx.http, |commands| { commands
+        //         .create_application_command(|command| slashcommands::ask::register(command))
+        //         // .create_application_command(|command| slashcommands::askloud::register(command))
+        //         .create_application_command(|command| slashcommands::search::register(command))
+        //         .create_application_command(|command| slashcommands::queue::register(command))
+        //         // .create_application_command(|command| slashcommands::skip::register(command))
+        //         .create_application_command(|command| slashcommands::leave::register(command))
+        //         .create_application_command(|command| slashcommands::play::register(command))
+        //         .create_application_command(|command| slashcommands::knowledge::register(command))
+        //         // .create_application_command(|command| slashcommands::paint::register(command))
+        //         // .create_application_command(|command| slashcommands::paintdetailed::register(command))
+        //         // .create_application_command(|command| slashcommands::paintportrait::register(command))
+        //         // .create_application_command(|command| slashcommands::paintlandscape::register(command))
+        //         // .create_application_command(|command| slashcommands::sketch::register(command))
+        // })
         // .await;
+        let commands: Result<Vec<Command>, SerenityError> = GuildId::set_application_commands(&guild_id, &ctx.http, |commands| {
+            commands
+            .create_application_command(|command| slashcommands::play::register(command))
+            .create_application_command(|command| slashcommands::search::register(command))
+            .create_application_command(|command| slashcommands::queue::register(command))
+            .create_application_command(|command| slashcommands::leave::register(command))
+            .create_application_command(|command| slashcommands::ask::register(command))
+            .create_application_command(|command| slashcommands::knowledge::register(command))
+            .create_application_command(|command| slashcommands::skip::register(command))
+         })
+        .await;
     }
 
     async fn cache_ready(&self, ctx: Context, _guilds: Vec<GuildId>) {
-        println!("Cache built successfully!");
+        println!("{}","Cache built successfully!".green());
 
         // it's safe to clone Context, but Arc is cheaper for this use case.
         // Untested claim, just theoretically. :P
         let ctx = Arc::new(ctx);
-
+        
         // We need to check that the loop is not already running when this event triggers,
         // as this event triggers every time the bot enters or leaves a guild, along every time the
         // ready shard event triggers.
@@ -194,8 +208,10 @@ impl SlashCommandHandler {
 }
 
 async fn process_commands(ctx: Context, command: ApplicationCommandInteraction)  {
-     //println!("Received command interaction: {:#?}", command);
+     println!("Received: {} : {}", &command.user.name.yellow(), &command.data.name.cyan());
      let content = match command.data.name.as_str() {
+        "leave" => slashcommands::leave::run(&ctx, &command.data.options).await,
+        "skip" => slashcommands::skip::run(&ctx, &command.data.options).await,
         "queue" => slashcommands::queue::run(&ctx, &command.data.options).await,
         "play" => {
             command
@@ -248,7 +264,7 @@ async fn process_commands(ctx: Context, command: ApplicationCommandInteraction) 
                 .create_interaction_response(&ctx.http, |response| {
                     response
                         .kind(InteractionResponseType::DeferredChannelMessageWithSource)
-                        .interaction_response_data(|message| message.ephemeral(false))
+                        .interaction_response_data(|message| message.ephemeral(true))
                 })
                 .await
                 .unwrap();
@@ -264,153 +280,153 @@ async fn process_commands(ctx: Context, command: ApplicationCommandInteraction) 
                 .unwrap();
             return;
         }
-        "askloud" => {
+        // "askloud" => {
+        //     command
+        //         .create_interaction_response(&ctx.http, |response| {
+        //             response
+        //                 .kind(InteractionResponseType::DeferredChannelMessageWithSource)
+        //                 .interaction_response_data(|message| message.ephemeral(false))
+        //         })
+        //         .await
+        //         .unwrap();
+
+        //     let track =
+        //         slashcommands::askloud::run(&ctx, &command, &command.data.options).await;
+
+        //     command
+        //         .edit_original_interaction_response(&ctx.http, |reponse| {
+        //             reponse.content(track)
+        //         })
+        //         .await
+        //         .unwrap();
+        //     return;
+        // }
+        // "paint" => {
+        //     command
+        //         .create_interaction_response(&ctx.http, |response| {
+        //             response
+        //                 .kind(InteractionResponseType::DeferredChannelMessageWithSource)
+        //                 .interaction_response_data(|message| {
+        //                     message.content("Generating image... give me a few minutes.")
+        //                 })
+        //         })
+        //         .await
+        //         .unwrap();
+
+        //     let file_path = slashcommands::paint::run(&command.data.options).await;
+        //     println!("file_path {}", &file_path);
+        //     let file = PathBuf::from(file_path);
+
+        //     // Send the file as a follow-up message
+        //     command
+        //         .create_followup_message(&ctx.http, |message| message.add_file(&file))
+        //         .await
+        //         .unwrap();
+
+        //     return;
+        // }
+        // "paintportrait" => {
+        //     command
+        //         .create_interaction_response(&ctx.http, |response| {
+        //             response
+        //                 .kind(InteractionResponseType::DeferredChannelMessageWithSource)
+        //                 .interaction_response_data(|message| {
+        //                     message.content("Generating image... give me a few minutes.")
+        //                 })
+        //         })
+        //         .await
+        //         .unwrap();
+
+        //     let file_path = slashcommands::paintportrait::run(&command.data.options).await;
+        //     println!("file_path {}", &file_path);
+        //     let file = PathBuf::from(file_path);
+
+        //     // Send the file as a follow-up message
+        //     command
+        //         .create_followup_message(&ctx.http, |message| message.add_file(&file))
+        //         .await
+        //         .unwrap();
+
+        //     return;
+        // }
+        // "paintlandscape" => {
+        //     command
+        //         .create_interaction_response(&ctx.http, |response| {
+        //             response
+        //                 .kind(InteractionResponseType::DeferredChannelMessageWithSource)
+        //                 .interaction_response_data(|message| {
+        //                     message.content("Generating image... give me a few minutes.")
+        //                 })
+        //         })
+        //         .await
+        //         .unwrap();
+
+        //     let file_path = slashcommands::paintlandscape::run(&command.data.options).await;
+        //     println!("file_path {}", &file_path);
+        //     let file = PathBuf::from(file_path);
+
+        //     // Send the file as a follow-up message
+        //     command
+        //         .create_followup_message(&ctx.http, |message| message.add_file(&file))
+        //         .await
+        //         .unwrap();
+
+        //     return;
+        // }
+        // "paintdetailed" => {
+        //     command
+        //         .create_interaction_response(&ctx.http, |response| {
+        //             response
+        //                 .kind(InteractionResponseType::DeferredChannelMessageWithSource)
+        //                 .interaction_response_data(|message| {
+        //                     message.content("Generating image... give me a few minutes.")
+        //                 })
+        //         })
+        //         .await
+        //         .unwrap();
+
+        //     let file_path = slashcommands::paintdetailed::run(&command.data.options).await;
+        //     println!("file_path {}", &file_path);
+        //     let file = PathBuf::from(file_path);
+
+        //     // Send the file as a follow-up message
+        //     command
+        //         .create_followup_message(&ctx.http, |message| message.add_file(&file))
+        //         .await
+        //         .unwrap();
+
+        //     return;
+        // }
+        // "sketch" => {
+        //     command
+        //         .create_interaction_response(&ctx.http, |response| {
+        //             response
+        //                 .kind(InteractionResponseType::DeferredChannelMessageWithSource)
+        //                 .interaction_response_data(|message| {
+        //                     message.content("Generating image... give me a few minutes.")
+        //                 })
+        //         })
+        //         .await
+        //         .unwrap();
+
+        //     let file_path = slashcommands::sketch::run(&command.data.options).await;
+        //     println!("file_path {}", &file_path);
+        //     let file = PathBuf::from(file_path);
+
+        //     // Send the file as a follow-up message
+        //     command
+        //         .create_followup_message(&ctx.http, |message| message.add_file(&file))
+        //         .await
+        //         .unwrap();
+
+        //     return;
+        // }
+        "wolfram" => {
             command
                 .create_interaction_response(&ctx.http, |response| {
                     response
                         .kind(InteractionResponseType::DeferredChannelMessageWithSource)
-                        .interaction_response_data(|message| message.ephemeral(false))
-                })
-                .await
-                .unwrap();
-
-            let track =
-                slashcommands::askloud::run(&ctx, &command, &command.data.options).await;
-
-            command
-                .edit_original_interaction_response(&ctx.http, |reponse| {
-                    reponse.content(track)
-                })
-                .await
-                .unwrap();
-            return;
-        }
-        "paint" => {
-            command
-                .create_interaction_response(&ctx.http, |response| {
-                    response
-                        .kind(InteractionResponseType::DeferredChannelMessageWithSource)
-                        .interaction_response_data(|message| {
-                            message.content("Generating image... give me a few minutes.")
-                        })
-                })
-                .await
-                .unwrap();
-
-            let file_path = slashcommands::paint::run(&command.data.options).await;
-            println!("file_path {}", &file_path);
-            let file = PathBuf::from(file_path);
-
-            // Send the file as a follow-up message
-            command
-                .create_followup_message(&ctx.http, |message| message.add_file(&file))
-                .await
-                .unwrap();
-
-            return;
-        }
-        "paintportrait" => {
-            command
-                .create_interaction_response(&ctx.http, |response| {
-                    response
-                        .kind(InteractionResponseType::DeferredChannelMessageWithSource)
-                        .interaction_response_data(|message| {
-                            message.content("Generating image... give me a few minutes.")
-                        })
-                })
-                .await
-                .unwrap();
-
-            let file_path = slashcommands::paintportrait::run(&command.data.options).await;
-            println!("file_path {}", &file_path);
-            let file = PathBuf::from(file_path);
-
-            // Send the file as a follow-up message
-            command
-                .create_followup_message(&ctx.http, |message| message.add_file(&file))
-                .await
-                .unwrap();
-
-            return;
-        }
-        "paintlandscape" => {
-            command
-                .create_interaction_response(&ctx.http, |response| {
-                    response
-                        .kind(InteractionResponseType::DeferredChannelMessageWithSource)
-                        .interaction_response_data(|message| {
-                            message.content("Generating image... give me a few minutes.")
-                        })
-                })
-                .await
-                .unwrap();
-
-            let file_path = slashcommands::paintlandscape::run(&command.data.options).await;
-            println!("file_path {}", &file_path);
-            let file = PathBuf::from(file_path);
-
-            // Send the file as a follow-up message
-            command
-                .create_followup_message(&ctx.http, |message| message.add_file(&file))
-                .await
-                .unwrap();
-
-            return;
-        }
-        "paintdetailed" => {
-            command
-                .create_interaction_response(&ctx.http, |response| {
-                    response
-                        .kind(InteractionResponseType::DeferredChannelMessageWithSource)
-                        .interaction_response_data(|message| {
-                            message.content("Generating image... give me a few minutes.")
-                        })
-                })
-                .await
-                .unwrap();
-
-            let file_path = slashcommands::paintdetailed::run(&command.data.options).await;
-            println!("file_path {}", &file_path);
-            let file = PathBuf::from(file_path);
-
-            // Send the file as a follow-up message
-            command
-                .create_followup_message(&ctx.http, |message| message.add_file(&file))
-                .await
-                .unwrap();
-
-            return;
-        }
-        "sketch" => {
-            command
-                .create_interaction_response(&ctx.http, |response| {
-                    response
-                        .kind(InteractionResponseType::DeferredChannelMessageWithSource)
-                        .interaction_response_data(|message| {
-                            message.content("Generating image... give me a few minutes.")
-                        })
-                })
-                .await
-                .unwrap();
-
-            let file_path = slashcommands::sketch::run(&command.data.options).await;
-            println!("file_path {}", &file_path);
-            let file = PathBuf::from(file_path);
-
-            // Send the file as a follow-up message
-            command
-                .create_followup_message(&ctx.http, |message| message.add_file(&file))
-                .await
-                .unwrap();
-
-            return;
-        }
-        "knowledge" => {
-            command
-                .create_interaction_response(&ctx.http, |response| {
-                    response
-                        .kind(InteractionResponseType::DeferredChannelMessageWithSource)
-                        .interaction_response_data(|message| message.ephemeral(false))
+                        .interaction_response_data(|message| message.ephemeral(true))
                 })
                 .await
                 .unwrap();
@@ -441,23 +457,23 @@ async fn process_commands(ctx: Context, command: ApplicationCommandInteraction) 
         })
         .await
     {
-        println!("Cannot respond to slash command: {}", why);
+        println!("{}: {}", "Cannot respond to slash command".red(), why);
     }
     
 }
 
 async fn command_poller(ctx2: Arc<Context>) {
     let mut counter: usize = 0;
+    println!("Polling Commands!");
+
     loop {
         counter += 1;
         if counter > 3 {
             counter = 0;
         }
+        // let dots: String = std::iter::repeat('.').take(counter).collect();
 
-        let dots: String = std::iter::repeat('.').take(counter).collect();
-        let message = format!("Polling Commands{} ", dots);
-
-        print!("\r{}{}", message, " ".repeat(20 - message.len()));
+        // print!("\r{}{}", message, " ".repeat(20 - message.len()));
         std::io::stdout().flush().unwrap();
         // Lock the mutex to access the shared data
         let mut global_data = GLOBAL_DATA.write().await;
@@ -484,7 +500,7 @@ async fn command_poller(ctx2: Arc<Context>) {
 
                     let args = Args::new(text_after, &[Delimiter::Single(',')]);
                     //ping(&ctx2, &msg, args).await.unwrap();
-                    voiceactivatedcommands::discordcommands::ask::ask(&ctx2, &msg, args).await;
+                    //voiceactivatedcommands::discordcommands::ask::ask(&ctx2, &msg, args).await;
             }else if let Some((word, text_after)) = get_word_and_text_after(&command, "search") {
                 println!("Word: {}", word);
                 println!("Text after the word: {}", text_after);
@@ -497,7 +513,7 @@ async fn command_poller(ctx2: Arc<Context>) {
 
                     let args = Args::new(text_after, &[Delimiter::Single(',')]);
                     //ping(&ctx2, &msg, args).await.unwrap();
-                    voiceactivatedcommands::discordcommands::search::search(&ctx2, &msg, args).await;
+                    //voiceactivatedcommands::discordcommands::search::search(&ctx2, &msg, args).await;
             }
             global_data.queued_command = "".to_string();
     }

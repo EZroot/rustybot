@@ -5,7 +5,7 @@ import socket
 import threading
 
 # Set the server address and port
-SERVER_IP = '192.168.0.4'  # Replace with your server IP address
+SERVER_IP = '192.168.0.5'  # Replace with your server IP address
 SERVER_PORT = 7679  # Replace with your desired port number
 
 # Set the desired audio parameters

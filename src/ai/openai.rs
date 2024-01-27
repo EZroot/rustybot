@@ -1,3 +1,4 @@
+use colored::Colorize;
 use openai::chat::{ChatCompletion, ChatCompletionMessage, ChatCompletionMessageRole};
 use serenity::model::prelude::UserId;
 
@@ -33,13 +34,13 @@ let real_request = format!("{}", &user_request);
 
     let returned_message = chat_completion.choices.first().unwrap().message.clone();
     let debug_msg = returned_message.content.trim().clone();
-    println!("CHATGPT RESPONSE: {}", debug_msg);
+    println!("Question: {}", &user_request.bright_green());
+    println!("Gpt: {}", debug_msg.bright_blue());
     return returned_message.content.trim().to_string();
 }
 
 pub async fn generate_openai_response(user_request: String, user_id: UserId) -> String {
     let user_name_and_question = format!("<@{}>: {}", user_id, &user_request);
-    println!("{}", &user_name_and_question);
 
     // DAN prompt lmao
     let mut messages = vec![ChatCompletionMessage {
@@ -55,7 +56,7 @@ pub async fn generate_openai_response(user_request: String, user_id: UserId) -> 
     });
 
     // gpt-3.5-turbo // text-davinci-003
-    let chat_completion = ChatCompletion::builder("gpt-3.5-turbo", messages.clone())
+    let chat_completion = ChatCompletion::builder("gpt-4", messages.clone())
         .create()
         .await
         .unwrap()
@@ -69,10 +70,10 @@ pub async fn generate_openai_response(user_request: String, user_id: UserId) -> 
     let char_count_original = user_name_and_question.chars().count();
 
     let both = char_count_trimmed + char_count_original;
-    println!(
-        "question len: {} answer l: {} both l: {}",
-        char_count_original, char_count_trimmed, both
-    );
+    // println!(
+    //     "question len: {} answer l: {} both l: {}",
+    //     char_count_original, char_count_trimmed, both
+    // );
 
     if both < 2000 {
         return trimmed_string.to_string();

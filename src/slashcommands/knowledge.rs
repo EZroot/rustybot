@@ -42,15 +42,15 @@ pub async fn run(ctx: &Context, command: &ApplicationCommandInteraction, options
     
     let answer = query(user_request).await;
 
-    format!("{}\n\n{}", &user_name_and_question, &answer)
+    format!("{}\n{}", &user_name_and_question, &answer)
         //messages.push(returned_message);
 }
 
 pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
-    command.name("knowledge").description("ask nerd shit").create_option(|option| {
+    command.name("wolfram").description("ask nerd shit").create_option(|option| {
         option
         .name("question")
-        .description("your dumb question")
+        .description("wolfram assisted question")
         .kind(CommandOptionType::String)
         .required(true)
     })

@@ -32,7 +32,7 @@ struct SubPod {
 pub async fn query(input: String) -> String {
     let query = WolframAlphaQuery {
         input: input,
-        appid: "QWQHV9-J6XYP9G697".to_string(),
+        appid: "1234".to_string(),
         output: "json".to_string(),
     };
 
@@ -50,8 +50,9 @@ pub async fn query(input: String) -> String {
         .flat_map(|pod| pod.subpods.iter())
         .filter_map(|subpod| subpod.plaintext.as_ref())
         .map(|text| text.replace("`", ""))
-        .map(|text| format!("``` {} ```", text))
+        .map(|text| text.replace("*", ""))
+        .map(|text| format!("{} \n", text))
         .collect::<String>();
 
-    format!("Sphinx of Knowledge:\n{}", answer)
+    format!("# __ Wolfram __\n{}", answer)
 }

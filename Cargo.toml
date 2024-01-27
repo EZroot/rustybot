@@ -5,6 +5,9 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[build]
+rustflags = ["-Awarnings"]
+
 [dependencies]
 serenity = { version = "0.11", features = ["cache", "framework", "standard_framework", "voice"] }
 songbird = {version = "0.3.2", features = ["yt-dlp", "builtin-queue"] }
@@ -29,3 +32,4 @@ openai = "1.0.0-alpha.8"
 serde = "1.0.163"
 base64 = "0.21.0"
 warp = "0.3"
+colored = "2.0"

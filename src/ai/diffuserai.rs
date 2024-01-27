@@ -75,8 +75,8 @@ pub async fn generate_stable_diffuse_image(
     let width_as_f32:f32= width as f32;
     let height_as_f32:f32= height as f32;
     
-    let upscaled_width = (width_as_f32 * 1.5) as i32; //if this isnt a multiple of 8 this will throw a error
-    let upscaled_height = (height_as_f32 * 1.5) as i32;
+    let upscaled_width = (width_as_f32 as i32);// + 256;//* 1.5) as i32; //if this isnt a multiple of 8 this will throw a error
+    let upscaled_height = (height_as_f32 as i32);// + 256;//* 1.5) as i32;
 
     if upscale_original_bool == false {
     let chunk_size = 32;

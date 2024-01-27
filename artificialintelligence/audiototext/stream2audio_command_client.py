@@ -7,7 +7,7 @@ import math
 import requests
 
 # Set the server address and port
-SERVER_IP = '192.168.0.4'  # Replace with the server's IP address
+SERVER_IP = '192.168.0.5'  # Replace with the server's IP address
 SERVER_PORT = 7679  # Replace with the server's port number
 SPEAKING_VOLUMN = 2000 # usual talking is 1000-2000, quiet is 200-500 or so
 MAX_BUFFER_SIZE = 50000 # how much audio to listen to till we try again

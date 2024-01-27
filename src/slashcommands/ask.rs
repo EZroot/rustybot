@@ -1,3 +1,4 @@
+use colored::Colorize;
 use serenity::builder::CreateApplicationCommand;
 use serenity::model::prelude::command::CommandOptionType;
 use serenity::model::application::interaction::{Interaction, InteractionResponseType};
@@ -42,15 +43,14 @@ pub async fn run(ctx: &Context, command: &ApplicationCommandInteraction, options
 
     
         let user_name_and_question = format!("<@{}>: {}", cmd_clone.id, args_clone);
-        
         let char_count_trimmed = raw_ai_response.chars().count();
         let char_count_original = user_name_and_question.chars().count();
     
         let both = char_count_trimmed + char_count_original;
-        println!(
-            "question len: {} answer l: {} both l: {}",
-            char_count_original, char_count_trimmed, both
-        );
+        // println!(
+        //     "question len: {} answer l: {} both l: {}",
+        //     char_count_original, char_count_trimmed, both
+        // );
         
         let mut cleaned_up_string = String::new();
         if both < 2000 {
@@ -62,7 +62,6 @@ pub async fn run(ctx: &Context, command: &ApplicationCommandInteraction, options
             let better = &raw_ai_response[..raw_ai_response.len() - difference_abs];
             cleaned_up_string = better.to_string();
         }
-
     format!("{}\n\n{}", user_name_and_question, cleaned_up_string)
 }
 

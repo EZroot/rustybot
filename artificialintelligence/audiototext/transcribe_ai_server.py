@@ -44,7 +44,7 @@ async def transcribe():
 
     response = {'command': predicted_sentences}
     parsed = requests.utils.quote(predicted_sentences)
-    url = 'http://192.168.0.4:3030/derp?recieved_command={}'.format(parsed)
+    url = 'http://192.168.0.5:3030/derp?recieved_command={}'.format(parsed)
     requests.get(url)
     print("Reponse sent: {} ", response)
     return jsonify(response)

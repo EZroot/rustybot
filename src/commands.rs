@@ -17,7 +17,7 @@ use std::{time::Duration};
 use crate::{messages::check_msg, ai::openai::generate_openai_response_include_username};
 
 #[group]
-#[commands(help, deafen, join, leave, mute, play, queue, ping, undeafen, unmute)]
+#[commands(help, deafen, join, mute, play, queue, ping, undeafen, unmute)]
 struct General;
 
 #[command]
