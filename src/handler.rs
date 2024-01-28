@@ -25,7 +25,7 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
 use std::time::Duration;
 
-use chrono::{Local, Utc};
+use chrono::{DateTime, Local, Utc};
 use tokio::io::{self, AsyncWriteExt};
 
 use std::sync::Mutex;
@@ -33,6 +33,7 @@ use colored::*;
 // use crate::commands::ping;
 use crate::messages::check_msg;
 use crate::userstats::{add_or_update_user, load_or_initialize_stats, print_specific_user_stats, save_stats};
+use crate::youtubestats::{display_top_priority_songs, load_or_initialize_songs};
 use crate::{commands, slashcommands, voiceactivatedcommands};
 use std::path::{self, PathBuf};
 
@@ -169,6 +170,8 @@ impl SlashCommandHandler {
             .create_application_command(|command| slashcommands::knowledge::register(command))
             .create_application_command(|command| slashcommands::skip::register(command))
             .create_application_command(|command| slashcommands::stats::register(command))
+            .create_application_command(|command| slashcommands::volume::register(command))
+            .create_application_command(|command| slashcommands::songhistory::register(command))
          })
         .await;
     }
@@ -217,7 +220,15 @@ if !command.data.options.is_empty(){
  for option in &command.data.options {
         match &option.resolved {
             Some(CommandDataOptionValue::String(value)) => {
-                println!("Received: {} : {} : {}", &command.user.name.yellow(), &command.data.name.cyan(), &value.bright_cyan());
+                let local_time: DateTime<Local> = Local::now();
+                println!("{} Received: {} : {} : {}", local_time.format("%H:%M:%S"), &command.user.name.yellow(), &command.data.name.cyan(), &value.bright_cyan());
+                let mut users = load_or_initialize_stats("stats.json").unwrap();
+                add_or_update_user(&mut users, &command.user.name, &command.data.name, vec![value.to_string()], 23);
+                save_stats("stats.json", &users).unwrap();
+            },
+            Some(CommandDataOptionValue::Number(value)) => {
+                let local_time: DateTime<Local> = Local::now();
+                println!("{} Received: {} : {} : {}", local_time.format("%H:%M:%S"), &command.user.name.yellow(), &command.data.name.cyan(), &value);
                 let mut users = load_or_initialize_stats("stats.json").unwrap();
                 add_or_update_user(&mut users, &command.user.name, &command.data.name, vec![value.to_string()], 23);
                 save_stats("stats.json", &users).unwrap();
@@ -258,6 +269,33 @@ if !command.data.options.is_empty(){
     
         return;
         }
+        "songhistory" => {
+            command
+            .create_interaction_response(&ctx.http, |response| {
+                response
+                    .kind(InteractionResponseType::DeferredChannelMessageWithSource)
+                    .interaction_response_data(|message| {
+                        message.flags(interaction::MessageFlags::EPHEMERAL)
+                    })
+            })
+            .await
+            .unwrap();
+    
+        //let track = slashcommands::play::run(&ctx, &command, &command.data.options).await;
+        let mut song_list = load_or_initialize_songs("youtube_history.json").unwrap();
+        let song_history = display_top_priority_songs(&song_list);
+        let response_content = format!("{}\n", &song_history); // Combine custom message and track
+    
+        command
+            .edit_original_interaction_response(&ctx.http, |response| {
+                response.content(response_content) // Set the combined content
+            })
+            .await
+            .unwrap();
+    
+        return;
+        }
+        "volume" => slashcommands::volume::run(&ctx, &command.data.options).await,
         "leave" => slashcommands::leave::run(&ctx, &command.data.options).await,
         "skip" => slashcommands::skip::run(&ctx, &command.data.options).await,
         "queue" => slashcommands::queue::run(&ctx, &command.data.options).await,

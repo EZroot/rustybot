@@ -14,6 +14,8 @@ use std::sync::{Mutex, Arc};
 
 use lazy_static::lazy_static;
 
+use crate::youtubestats::{add_or_update_song, load_or_initialize_songs, save_songs};
+
 lazy_static! {
     static ref YTDL_MUTEX: Arc<Mutex<()>> = Arc::new(Mutex::new(()));
 }
@@ -82,8 +84,7 @@ let connect_to = match channel_id {
     if let Some(handler_lock) = manager.get(guild_id) {
         let mut handler = handler_lock.lock().await;
         println!("Url {}", &url.bright_magenta());
-
-
+        let url_clone: String = url.clone();
         let source = tokio::task::spawn_blocking(move || {
             let _lock = YTDL_MUTEX.lock().unwrap();
             Restartable::ytdl(url, true) //if any issues, check this lazy instantiation
@@ -93,6 +94,11 @@ let connect_to = match channel_id {
 
         let song = handler.enqueue_source(true_source.into());
         let song_title = song.metadata().title.as_ref().unwrap();
+        
+        let mut song_list = load_or_initialize_songs("youtube_history.json").unwrap();
+        add_or_update_song(&mut song_list, &song_title, &url_clone);
+        save_songs("youtube_history.json", &song_list).unwrap();
+
         return format!("Added {} to queue",&song_title)
     }
     else{
