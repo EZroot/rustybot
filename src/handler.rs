@@ -5,6 +5,7 @@ use serenity::builder::CreateMessage;
 use serenity::framework::standard::{CommandOptions, Args, Delimiter};
 use serenity::http::Http;
 use serenity::model::application::command::{Command, CommandOptionType};
+use serenity::model::application::interaction::application_command::CommandDataOptionValue;
 use serenity::model::application::interaction::{Interaction, InteractionResponseType};
 use serenity::model::gateway::Ready;
 use serenity::model::id::GuildId;
@@ -31,6 +32,7 @@ use std::sync::Mutex;
 use colored::*;
 // use crate::commands::ping;
 use crate::messages::check_msg;
+use crate::userstats::{add_or_update_user, load_or_initialize_stats, print_specific_user_stats, save_stats};
 use crate::{commands, slashcommands, voiceactivatedcommands};
 use std::path::{self, PathBuf};
 
@@ -166,6 +168,7 @@ impl SlashCommandHandler {
             .create_application_command(|command| slashcommands::ask::register(command))
             .create_application_command(|command| slashcommands::knowledge::register(command))
             .create_application_command(|command| slashcommands::skip::register(command))
+            .create_application_command(|command| slashcommands::stats::register(command))
          })
         .await;
     }
@@ -208,8 +211,53 @@ impl SlashCommandHandler {
 }
 
 async fn process_commands(ctx: Context, command: ApplicationCommandInteraction)  {
-     println!("Received: {} : {}", &command.user.name.yellow(), &command.data.name.cyan());
+
+//Save our user stats
+if !command.data.options.is_empty(){
+ for option in &command.data.options {
+        match &option.resolved {
+            Some(CommandDataOptionValue::String(value)) => {
+                println!("Received: {} : {} : {}", &command.user.name.yellow(), &command.data.name.cyan(), &value.bright_cyan());
+                let mut users = load_or_initialize_stats("stats.json").unwrap();
+                add_or_update_user(&mut users, &command.user.name, &command.data.name, vec![value.to_string()], 23);
+                save_stats("stats.json", &users).unwrap();
+            },
+            _ => {}
+        }
+    }
+}else{
+    println!("Received: {} : {}", &command.user.name.yellow(), &command.data.name.cyan());
+    let mut users = load_or_initialize_stats("stats.json").unwrap();
+                add_or_update_user(&mut users, &command.user.name, &command.data.name, vec!["none".to_string()], 23);
+                save_stats("stats.json", &users).unwrap();
+}
+
      let content = match command.data.name.as_str() {
+        "stats" => {
+            command
+            .create_interaction_response(&ctx.http, |response| {
+                response
+                    .kind(InteractionResponseType::DeferredChannelMessageWithSource)
+                    .interaction_response_data(|message| {
+                        message.flags(interaction::MessageFlags::EPHEMERAL)
+                    })
+            })
+            .await
+            .unwrap();
+    
+        //let track = slashcommands::play::run(&ctx, &command, &command.data.options).await;
+        let user_stats = print_specific_user_stats(&command.user.name).unwrap();
+        let response_content = format!("{}\n", &user_stats); // Combine custom message and track
+    
+        command
+            .edit_original_interaction_response(&ctx.http, |response| {
+                response.content(response_content) // Set the combined content
+            })
+            .await
+            .unwrap();
+    
+        return;
+        }
         "leave" => slashcommands::leave::run(&ctx, &command.data.options).await,
         "skip" => slashcommands::skip::run(&ctx, &command.data.options).await,
         "queue" => slashcommands::queue::run(&ctx, &command.data.options).await,

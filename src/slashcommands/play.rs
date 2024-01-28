@@ -1,3 +1,4 @@
+use colored::Colorize;
 use serenity::builder::CreateApplicationCommand;
 use serenity::model::prelude::command::CommandOptionType;
 use serenity::model::application::interaction::{Interaction, InteractionResponseType};
@@ -80,7 +81,7 @@ let connect_to = match channel_id {
 
     if let Some(handler_lock) = manager.get(guild_id) {
         let mut handler = handler_lock.lock().await;
-        println!("Url {}", &url);
+        println!("Url {}", &url.bright_magenta());
 
 
         let source = tokio::task::spawn_blocking(move || {

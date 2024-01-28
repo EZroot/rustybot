@@ -1,3 +1,4 @@
+use colored::Colorize;
 use serenity::builder::CreateApplicationCommand;
 use serenity::model::prelude::command::CommandOptionType;
 use serenity::model::application::interaction::{Interaction, InteractionResponseType};
@@ -53,7 +54,7 @@ pub async fn run(ctx: &Context, options: &[CommandDataOption]) -> String {
             let meta_data =  handler.queue().current_queue()[0].metadata().clone();
             let title = meta_data.title.unwrap();
             final_message = format!("Skipping {}", &title);
-
+            println!("Skipping: {}",&final_message.bright_blue());
             handler.queue().skip();
                 
         }
