@@ -48,7 +48,7 @@ pub fn display_top_priority_songs(song_list: &SongList) -> String {
     let mut counter = 0;
     for song in songs.iter().take(10) {
         counter+=1;
-        output.push_str(&format!("#{} Title: {}, URL: {}, Count: {}\n", counter, song.title, song.url, song.priority));
+        output.push_str(&format!("#{} Title: {}, URL: <{}>, Count: {}\n", counter, song.title, song.url, song.priority));
     }
 
     output

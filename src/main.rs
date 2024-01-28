@@ -84,6 +84,8 @@ mod slashcommands {
     pub mod sketch;
     pub mod volume;
     pub mod songhistory;
+    pub mod dan;
+    pub mod time;
 }
 
 use crate::{commands::GENERAL_GROUP, handler::GLOBAL_DATA};
@@ -103,8 +105,8 @@ impl TypeMapKey for VoiceManager {
 async fn main() {
     tracing_subscriber::fmt::init();
     // Configure the client with your Discord bot token in the environment.
-    let discord_token = "aaaa";
-    let openai_token = "vvv".to_string();
+    let discord_token = "aaaaa";
+    let openai_token = "bbbbb".to_string();
     let discord_app_id = 123;
     //openai
     set_key(openai_token);

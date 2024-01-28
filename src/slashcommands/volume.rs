@@ -23,8 +23,8 @@ pub async fn run(ctx: &Context, options: &[CommandDataOption]) -> String {
     }
     let args_clone_f32: f32 = args_clone as f32; // Convert f64 to f32
 
-    if args_clone_f32 > 2.0 {
-        final_message = format!("ERROR: Volume can only be 0.0 to 2.0 (Above 1.0 is boosted)")
+    if args_clone_f32 > 3.0 {
+        final_message = format!("ERROR: Volume can only be 0.0 to 3.0 (Above 1.0 is boosted)")
     }else{
     let guild_id = GuildId::from(308708637679812608);//self.guild_id.unwrap();
     let manager = songbird::get(ctx).await
@@ -46,7 +46,7 @@ pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicatio
     command.name("volume").description("Set the current songs volume").create_option(|option| {
         option
         .name("vol")
-        .description("0.0 - 2.0 (2.0 is 200%)")
+        .description("0.0 - 3.0 (3.0 is 300%)")
         .kind(CommandOptionType::Number)
         .required(true)
 })}

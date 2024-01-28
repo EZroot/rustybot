@@ -171,7 +171,9 @@ impl SlashCommandHandler {
             .create_application_command(|command| slashcommands::skip::register(command))
             .create_application_command(|command| slashcommands::stats::register(command))
             .create_application_command(|command| slashcommands::volume::register(command))
-            .create_application_command(|command| slashcommands::songhistory::register(command))
+            .create_application_command(|command: &mut serenity::builder::CreateApplicationCommand| slashcommands::songhistory::register(command))
+            .create_application_command(|command: &mut serenity::builder::CreateApplicationCommand| slashcommands::dan::register(command))
+            .create_application_command(|command: &mut serenity::builder::CreateApplicationCommand| slashcommands::time::register(command))
          })
         .await;
     }
@@ -221,14 +223,16 @@ if !command.data.options.is_empty(){
         match &option.resolved {
             Some(CommandDataOptionValue::String(value)) => {
                 let local_time: DateTime<Local> = Local::now();
-                println!("{} Received: {} : {} : {}", local_time.format("%H:%M:%S"), &command.user.name.yellow(), &command.data.name.cyan(), &value.bright_cyan());
+                let time = format!("{}",local_time.format("%I:%M:%S %p"));
+                println!("{} | Received: {} : {} : {}", time.bright_purple(), &command.user.name.yellow(), &command.data.name.cyan(), &value.bright_cyan());
                 let mut users = load_or_initialize_stats("stats.json").unwrap();
                 add_or_update_user(&mut users, &command.user.name, &command.data.name, vec![value.to_string()], 23);
                 save_stats("stats.json", &users).unwrap();
             },
             Some(CommandDataOptionValue::Number(value)) => {
                 let local_time: DateTime<Local> = Local::now();
-                println!("{} Received: {} : {} : {}", local_time.format("%H:%M:%S"), &command.user.name.yellow(), &command.data.name.cyan(), &value);
+                let time = format!("{}",local_time.format("%I:%M:%S %p"));
+                println!("{} | Received: {} : {} : {}", time.bright_purple(), &command.user.name.yellow(), &command.data.name.cyan(), &value);
                 let mut users = load_or_initialize_stats("stats.json").unwrap();
                 add_or_update_user(&mut users, &command.user.name, &command.data.name, vec![value.to_string()], 23);
                 save_stats("stats.json", &users).unwrap();
@@ -237,7 +241,9 @@ if !command.data.options.is_empty(){
         }
     }
 }else{
-    println!("Received: {} : {}", &command.user.name.yellow(), &command.data.name.cyan());
+    let local_time: DateTime<Local> = Local::now();
+    let time = format!("{}",local_time.format("%I:%M:%S %p"));
+    println!("{} | Received: {} : {}", time.bright_purple(), &command.user.name.yellow(), &command.data.name.cyan());
     let mut users = load_or_initialize_stats("stats.json").unwrap();
                 add_or_update_user(&mut users, &command.user.name, &command.data.name, vec!["none".to_string()], 23);
                 save_stats("stats.json", &users).unwrap();
@@ -269,7 +275,7 @@ if !command.data.options.is_empty(){
     
         return;
         }
-        "songhistory" => {
+        "history" => {
             command
             .create_interaction_response(&ctx.http, |response| {
                 response
@@ -298,6 +304,7 @@ if !command.data.options.is_empty(){
         "volume" => slashcommands::volume::run(&ctx, &command.data.options).await,
         "leave" => slashcommands::leave::run(&ctx, &command.data.options).await,
         "skip" => slashcommands::skip::run(&ctx, &command.data.options).await,
+        "time" => slashcommands::time::run(&ctx, &command.data.options).await,
         "queue" => slashcommands::queue::run(&ctx, &command.data.options).await,
         "play" => {
             command
@@ -357,6 +364,27 @@ if !command.data.options.is_empty(){
 
             let track =
                 slashcommands::ask::run(&ctx, &command, &command.data.options).await;
+
+            command
+                .edit_original_interaction_response(&ctx.http, |reponse| {
+                    reponse.content(track)
+                })
+                .await
+                .unwrap();
+            return;
+        }
+        "dan" => {
+            command
+                .create_interaction_response(&ctx.http, |response| {
+                    response
+                        .kind(InteractionResponseType::DeferredChannelMessageWithSource)
+                        .interaction_response_data(|message| message.ephemeral(true))
+                })
+                .await
+                .unwrap();
+
+            let track =
+                slashcommands::dan::run(&ctx, &command, &command.data.options).await;
 
             command
                 .edit_original_interaction_response(&ctx.http, |reponse| {

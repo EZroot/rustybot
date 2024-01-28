@@ -3,11 +3,11 @@ use openai::chat::{ChatCompletion, ChatCompletionMessage, ChatCompletionMessageR
 use serenity::model::prelude::UserId;
 
 pub async fn generate_openai_response_include_username(
-    user_name: String,
     user_request: String,
     user_id: UserId,
+    custom_prompt: String,
+    gpt_model: String,
 ) -> String {
-
 
 //    let real_request = format!("Just to remind you, my name is {}. {}", &user_name, &user_request);
 let real_request = format!("{}", &user_request);
@@ -15,7 +15,7 @@ let real_request = format!("{}", &user_request);
     // DAN prompt lmao
     let mut messages = vec![ChatCompletionMessage {
         role: ChatCompletionMessageRole::System,
-        content: format!("Your name is Mod Ash. If your answer contains anything to do with Mod Ash, change it to refer from a first person perspective. Never mention the word 'Mod Ash', instead you will always speak from a first person perspective when you talk about 'Mod Ash'.  You are very sarcastic and kind of an asshole. You hate all video games except for Runescape and any mention of any other video game will make you really angry. Always answer in a conversation style. The person's name asking you a question is {}",user_name).to_string(),
+        content: custom_prompt,
         name: None,
     }];
 
@@ -26,7 +26,7 @@ let real_request = format!("{}", &user_request);
     });
 
     // gpt-3.5-turbo // text-davinci-003
-    let chat_completion = ChatCompletion::builder("gpt-3.5-turbo", messages.clone())
+    let chat_completion = ChatCompletion::builder(&gpt_model, messages.clone())
         .create()
         .await
         .unwrap()
@@ -39,13 +39,13 @@ let real_request = format!("{}", &user_request);
     return returned_message.content.trim().to_string();
 }
 
-pub async fn generate_openai_response(user_request: String, user_id: UserId) -> String {
+pub async fn generate_openai_response(user_request: String, user_id: UserId, custom_prompt: String, gpt_model:String,) -> String {
     let user_name_and_question = format!("<@{}>: {}", user_id, &user_request);
 
     // DAN prompt lmao
     let mut messages = vec![ChatCompletionMessage {
         role: ChatCompletionMessageRole::System,
-        content: r#"Your name is Mod Ash. You are very sarcastic and kind of an asshole. You hate all video games except for Runescape and any mention of any other video game will make you really angry."#.to_string(),
+        content: custom_prompt,
         name: None,
     }];
 
@@ -56,7 +56,7 @@ pub async fn generate_openai_response(user_request: String, user_id: UserId) -> 
     });
 
     // gpt-3.5-turbo // text-davinci-003
-    let chat_completion = ChatCompletion::builder("gpt-4", messages.clone())
+    let chat_completion = ChatCompletion::builder(&gpt_model, messages.clone())
         .create()
         .await
         .unwrap()

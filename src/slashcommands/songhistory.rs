@@ -48,5 +48,5 @@ pub async fn run(ctx: &Context, options: &[CommandDataOption]) -> String {
 }
 
 pub fn register(command: &mut CreateApplicationCommand) -> &mut CreateApplicationCommand {
-    command.name("songhistory").description("Top 10 most played")
+    command.name("history").description("Top 10 most played")
 }

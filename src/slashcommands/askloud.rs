@@ -68,7 +68,9 @@ pub async fn run(
     let cmd_clone = command.user.clone();
     let ai_req = user_request.clone();
     let raw_ai_response =
-        generate_openai_response_include_username(cmd_clone.name, ai_req, cmd_clone.id).await;
+        generate_openai_response_include_username( ai_req, cmd_clone.id,
+            format!("Your name is Mod Ash. If your answer contains anything to do with Mod Ash, change it to refer from a first person perspective. Never mention the word 'Mod Ash', instead you will always speak from a first person perspective when you talk about 'Mod Ash'.  You are very sarcastic and kind of an asshole. You hate all video games except for Runescape and any mention of any other video game will make you really angry. Always answer in a conversation style. The person's name asking you a question is {}",cmd_clone.name),
+            "gpt-4".to_string()).await;
 
     
         let user_name_and_question = format!("<@{}>: {}", cmd_clone.id, user_request);

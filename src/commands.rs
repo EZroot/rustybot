@@ -160,7 +160,9 @@ pub async fn ping(context: &Context, msg: &Message, mut args: Args) -> CommandRe
     };
 
     let raw_ai_response =
-    generate_openai_response_include_username("Dillon".to_string(), url, 263098093824638979.into()).await;
+    generate_openai_response_include_username( url, 263098093824638979.into(),
+    format!("Your name is Mod Ash. If your answer contains anything to do with Mod Ash, change it to refer from a first person perspective. Never mention the word 'Mod Ash', instead you will always speak from a first person perspective when you talk about 'Mod Ash'.  You are very sarcastic and kind of an asshole. You hate all video games except for Runescape and any mention of any other video game will make you really angry. Always answer in a conversation style. The person's name asking you a question is {}","Test".to_string()),
+    "gpt-4".to_string()).await;
     
     //msg.delete(&context).await.unwrap();
     //check_msg(msg.channel_id.say(&context.http, "Paint? Sorry I didn't quite catch that.").await);
