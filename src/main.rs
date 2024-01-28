@@ -48,6 +48,8 @@ mod commands;
 mod ffmpeg_utils;
 mod handler;
 mod messages;
+pub mod userstats;
+pub mod youtubestats;
 
 mod ai {
     pub mod diffuserai;
@@ -75,10 +77,13 @@ mod slashcommands {
     pub mod play;
     pub mod leave;
     pub mod skip;
+    pub mod stats;
     pub mod queue;
     pub mod search;
     pub mod speak;
     pub mod sketch;
+    pub mod volume;
+    pub mod songhistory;
 }
 
 use crate::{commands::GENERAL_GROUP, handler::GLOBAL_DATA};
@@ -99,8 +104,8 @@ async fn main() {
     tracing_subscriber::fmt::init();
     // Configure the client with your Discord bot token in the environment.
     let discord_token = "aaaa";
-    let openai_token = "aaaa".to_string();
-    let discord_app_id = 1234;
+    let openai_token = "vvv".to_string();
+    let discord_app_id = 123;
     //openai
     set_key(openai_token);
 
