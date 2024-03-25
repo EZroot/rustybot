@@ -105,9 +105,9 @@ impl TypeMapKey for VoiceManager {
 async fn main() {
     tracing_subscriber::fmt::init();
     // Configure the client with your Discord bot token in the environment.
-    let discord_token = "aaaaa";
-    let openai_token = "bbbbb".to_string();
-    let discord_app_id = 123;
+    let discord_token = "aaa";
+    let openai_token = "bbb".to_string();
+    let discord_app_id = 0;
     //openai
     set_key(openai_token);
 
@@ -173,7 +173,7 @@ async fn main() {
             ccc
         });
 
-        warp::serve(route).run(([192, 168, 0, 5], 3030)).await;
+        warp::serve(route).run(([0, 0, 0, 0], 3030)).await;
     });
 
     let client_handle = tokio::spawn(async move {
