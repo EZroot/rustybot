@@ -97,8 +97,8 @@ wsl --set-version [distro] [wslversion]
 ```
   
 
-## Just use Conda
-...With python tensorflow gpu build.... much less of a headache
+## Or use Conda
+...With python tensorflow gpu build.... 
 ```bash
 conda install -c conda-forge cudatoolkit=11.8.0
 
